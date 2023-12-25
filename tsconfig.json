@@ -6,6 +6,5 @@
     "noFallthroughCasesInSwitch": true,
     "jsxImportSource": "@emotion/react",
   },
-  "include": ["src"]
 }
 
