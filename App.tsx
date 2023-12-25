@@ -11,7 +11,6 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   useColorScheme,
   View,
@@ -24,6 +23,7 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import {css} from '@emotion/native';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -96,23 +96,23 @@ function App(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
+const styles = {
+  sectionContainer: css({
     marginTop: 32,
     paddingHorizontal: 24,
-  },
-  sectionTitle: {
+  }),
+  sectionTitle: css({
     fontSize: 24,
     fontWeight: '600',
-  },
-  sectionDescription: {
+  }),
+  sectionDescription: css({
     marginTop: 8,
     fontSize: 18,
     fontWeight: '400',
-  },
-  highlight: {
+  }),
+  highlight: css({
     fontWeight: '700',
-  },
-});
+  }),
+};
 
 export default App;
