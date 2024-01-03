@@ -5,6 +5,8 @@
     "noUnusedLocals": true,
     "noFallthroughCasesInSwitch": true,
     "jsxImportSource": "@emotion/react",
+    "paths": {"@/*":["./app/*"]}
   },
+  
 }
 
