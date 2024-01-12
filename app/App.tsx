@@ -5,18 +5,26 @@
  * @format
  */
 
-import {SafeAreaView, StatusBar} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {StatusBar} from 'react-native';
+import Main from './view/Main';
 
-import Home from './view/Home';
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
+export type RootStackParamList = {
+  Main: undefined;
+};
 function App() {
   StatusBar.setTranslucent(true);
   StatusBar.setBarStyle('default');
   StatusBar.setBackgroundColor('transparent');
   return (
-    <SafeAreaView style={{backgroundColor: 'white'}}>
-      <Home />
-    </SafeAreaView>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Screen name="Main" component={Main} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
