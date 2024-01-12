@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {css} from '@emotion/native';
 import React, {useState} from 'react';
 import {
@@ -6,14 +7,16 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
-import Group from '../components/@base/Group';
-import Stack from '../components/@base/Stack';
-import SeeMore from '../components/SeeMore';
-import {mockData} from '../utils/mockData';
 
+import IconPlus from '../../assets/icon_plus.svg';
+import IconSearch from '../../assets/icon_search.svg';
+import Group from '../../components/@base/Group';
+import Stack from '../../components/@base/Stack';
+import SeeMore from '../../components/SeeMore';
+import {mockData} from '../../utils/mockData';
+import Search from '../search/Search';
 const styles = {
   background: css({
     width: '100%',
@@ -22,6 +25,7 @@ const styles = {
   posterImg: css({width: 108, height: 165, borderRadius: 5}),
   search: {
     box: css({
+      position: 'relative',
       backgroundColor: '#F2F3F5',
       justifyContent: 'center',
       borderRadius: 16,
@@ -42,12 +46,17 @@ const styles = {
     }),
   },
 };
+// type HomeProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 function Home() {
-  const [listItem, setListItem] = useState(1);
-  const moviePoster = mockData.results.map((item) => {
-    return item.poster_path;
-  });
-  return (
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearchPress = () => {
+    setIsSearching(!isSearching);
+  };
+
+  return isSearching ? (
+    <Search handleSearch={handleSearchPress} />
+  ) : (
     <Stack align="center">
       <Stack style={styles.background}>
         <ImageBackground
@@ -65,11 +74,12 @@ function Home() {
             }}
           />
           <Group style={styles.search.box} align="center">
-            <TextInput
-              placeholder="기록할 영화를 검색하세요!"
-              placeholderTextColor="#747F8E"
-              style={styles.search.input}
-            />
+            <IconSearch style={{position: 'absolute', left: 15}} />
+            <Pressable style={styles.search.input} onPress={handleSearchPress}>
+              <Text style={{color: '#747F8E', fontSize: 12, lineHeight: 16}}>
+                기록할 영화를 검색하세요!
+              </Text>
+            </Pressable>
           </Group>
           <Group position="center" style={styles.movieRecordList.wrapper}>
             <ScrollView
@@ -107,7 +117,7 @@ function Home() {
               },
             ]}
           >
-            <Group>
+            <Group align="center" gap={4}>
               <Text
                 style={{
                   fontSize: 12,
@@ -119,6 +129,7 @@ function Home() {
               >
                 새로운 기록 추가하기
               </Text>
+              <IconPlus fill={'#fff'} />
             </Group>
           </Pressable>
         </ImageBackground>
