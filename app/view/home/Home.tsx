@@ -1,5 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import {css} from '@emotion/native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React, {useState} from 'react';
 import {
   Image,
@@ -9,61 +11,84 @@ import {
   Text,
   View,
 } from 'react-native';
+import {RootStackParamList} from '../../App';
 
 import IconPlus from '../../assets/icon_plus.svg';
 import IconSearch from '../../assets/icon_search.svg';
 import Group from '../../components/@base/Group';
 import Stack from '../../components/@base/Stack';
 import SeeMore from '../../components/SeeMore';
+import {Fonts} from '../../utils/fontStyle';
 import {mockData} from '../../utils/mockData';
-import Search from '../search/Search';
 const styles = {
-  background: css({
-    width: '100%',
-    alignItems: 'center',
-  }),
-  posterImg: css({width: 108, height: 165, borderRadius: 5}),
-  search: {
-    box: css({
-      position: 'relative',
-      backgroundColor: '#F2F3F5',
-      justifyContent: 'center',
-      borderRadius: 16,
-      width: '91.6%',
-      height: 32,
-      marginTop: 59,
+  banner: {
+    background: css({
+      width: '100%',
+      alignItems: 'center',
     }),
-    input: css({
-      color: '#747F8E',
-      padding: 0,
-      fontSize: 12,
+    posterImg: css({width: 108, height: 165, borderRadius: 5}),
+    search: {
+      box: css({
+        position: 'relative',
+        backgroundColor: '#F2F3F5',
+        justifyContent: 'center',
+        borderRadius: 16,
+        width: '91.6%',
+        height: 32,
+        marginTop: 59,
+      }),
+      input: css({
+        color: '#747F8E',
+        padding: 0,
+        fontSize: 12,
+      }),
+    },
+    movieRecordList: {
+      wrapper: css({
+        backgroundColor: 'transparent',
+        marginTop: 28,
+      }),
+    },
+    addRecordBtn: css({
+      width: '80%',
+      height: 35,
+      borderRadius: 10,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(242,243,245,0.4)',
+      marginTop: 15,
+      marginBottom: 17,
+      paddingTop: 11,
+      paddingBottom: 9,
     }),
   },
-  movieRecordList: {
+  movieInfoList: {
     wrapper: css({
-      backgroundColor: 'transparent',
-      marginTop: 28,
+      gap: 8,
+      padding: 10,
+      paddingLeft: 15,
+      paddingRight: 15,
+      backgroundColor: '#EDEDED',
     }),
+    poster: css({width: 125, height: 171, borderRadius: 10}),
   },
 };
-// type HomeProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type HomeScreenProps = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 function Home() {
   const [isSearching, setIsSearching] = useState(false);
-
+  const navigation = useNavigation<HomeScreenProps>();
   const handleSearchPress = () => {
-    setIsSearching(!isSearching);
+    navigation.navigate('Search');
   };
 
-  return isSearching ? (
-    <Search handleSearch={handleSearchPress} />
-  ) : (
-    <Stack align="center">
-      <Stack style={styles.background}>
+  return (
+    <Stack align="center" style={{backgroundColor: '#fff'}}>
+      <Stack style={styles.banner.background}>
         <ImageBackground
           source={{
             uri: 'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
           }}
-          style={styles.background}
+          style={styles.banner.background}
         >
           <View
             style={{
@@ -73,15 +98,19 @@ function Home() {
               backgroundColor: 'rgba(0,0,0,0.3)',
             }}
           />
-          <Group style={styles.search.box} align="center">
+          <Group style={styles.banner.search.box} align="center">
             <IconSearch style={{position: 'absolute', left: 15}} />
-            <Pressable style={styles.search.input} onPress={handleSearchPress}>
-              <Text style={{color: '#747F8E', fontSize: 12, lineHeight: 16}}>
-                기록할 영화를 검색하세요!
-              </Text>
+            <Pressable
+              style={styles.banner.search.input}
+              onPress={handleSearchPress}
+            >
+              <Text style={Fonts.B2}>기록할 영화를 검색하세요!</Text>
             </Pressable>
           </Group>
-          <Group position="center" style={styles.movieRecordList.wrapper}>
+          <Group
+            position="center"
+            style={styles.banner.movieRecordList.wrapper}
+          >
             <ScrollView
               horizontal
               pagingEnabled
@@ -101,31 +130,19 @@ function Home() {
             </ScrollView>
           </Group>
           <Pressable
-            onPress={() => {}}
-            style={[
-              {
-                width: '80%',
-                height: 35,
-                borderRadius: 10,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(242,243,245,0.4)',
-                marginTop: 15,
-                marginBottom: 17,
-                paddingTop: 11,
-                paddingBottom: 9,
-              },
-            ]}
+            onPress={() => {
+              navigation.navigate('AddRecord');
+            }}
+            style={styles.banner.addRecordBtn}
           >
             <Group align="center" gap={4}>
               <Text
-                style={{
-                  fontSize: 12,
-                  fontStyle: 'normal',
-                  padding: 0,
-                  lineHeight: 15,
-                  color: 'white',
-                }}
+                style={[
+                  Fonts.B2,
+                  {
+                    color: '#fff',
+                  },
+                ]}
               >
                 새로운 기록 추가하기
               </Text>
@@ -153,44 +170,39 @@ function Home() {
           }}
         >
           <Text
-            style={{
-              color: '#2D3540',
-              fontSize: 18,
-              fontWeight: 'bold',
-            }}
+            style={[
+              Fonts.H2,
+              {
+                color: '#2D3540',
+              },
+            ]}
           >
             인기 한국 작품을 기록해 볼까요?
           </Text>
-          <SeeMore link="인기 작품" type="small" />
+          <SeeMore link="인기 작품" />
         </Group>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          snapToInterval={125}
-          contentContainerStyle={{
-            gap: 8,
-            padding: 10,
-            paddingLeft: 15,
-            paddingRight: 15,
-            backgroundColor: '#EDEDED',
-          }}
+          contentContainerStyle={styles.movieInfoList.wrapper}
         >
           {mockData.results.map((item) => {
             return (
               <View>
                 <Image
                   src={'https://image.tmdb.org/t/p/original' + item.poster_path}
-                  style={{width: 125, height: 171, borderRadius: 10}}
+                  style={styles.movieInfoList.poster}
                   key={`popular-list-${item.title}`}
                 />
                 <Text
-                  style={{
-                    fontSize: 12,
-                    color: 'black',
-                    width: 125,
-                    marginTop: 8,
-                  }}
+                  style={[
+                    Fonts.B2,
+                    {
+                      color: '#000',
+                      width: 125,
+                      marginTop: 8,
+                    },
+                  ]}
                 >
                   {item.title}
                 </Text>

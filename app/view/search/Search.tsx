@@ -1,4 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
+import {useNavigation} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {Image, Pressable, ScrollView, Text, TextInput} from 'react-native';
 import IconSearch from '../../assets/icon_search.svg';
@@ -6,12 +7,8 @@ import Group from '../../components/@base/Group';
 import Stack from '../../components/@base/Stack';
 import {mockData} from '../../utils/mockData';
 
-interface SearchProps {
-  handleSearch: () => void;
-}
-
-function Search({handleSearch}: SearchProps) {
-  // const [searchItem, setSearchItem] = useState('');
+function Search() {
+  const navigation = useNavigation();
   const [textInput, setTextInput] = useState('');
   return (
     <ScrollView
@@ -42,7 +39,11 @@ function Search({handleSearch}: SearchProps) {
             }}
           />
         </Group>
-        <Pressable onPress={handleSearch}>
+        <Pressable
+          onPress={() => {
+            navigation.goBack();
+          }}
+        >
           <Text style={{color: '#6F00F8'}}>취소</Text>
         </Pressable>
       </Group>
