@@ -1,11 +1,14 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
 import IconCalendar from '../assets/icon_calendar.svg';
 import IconFolder from '../assets/icon_folder.svg';
 import IconHome from '../assets/icon_home.svg';
 import IconProfile from '../assets/icon_profile.svg';
+import AddRecord from './addrecord/AddRecord';
 import Home from './home/Home';
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 function Main() {
   return (
     <Tab.Navigator
@@ -20,13 +23,22 @@ function Main() {
     >
       <Tab.Screen
         name="홈"
-        component={Home}
         options={{
           tabBarIcon: ({color}) => {
             return <IconHome fill={color} />;
           },
         }}
-      />
+      >
+        {() => (
+          <Stack.Navigator
+            screenOptions={{headerShown: false}}
+            initialRouteName="Home"
+          >
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen name="AddRecord" component={AddRecord} />
+          </Stack.Navigator>
+        )}
+      </Tab.Screen>
       <Tab.Screen
         name="보관함"
         component={Home}
