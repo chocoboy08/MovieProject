@@ -1,32 +1,40 @@
 import {css} from '@emotion/native';
 
 export const Fonts = {
-  H1: css({
-    fontFamily: 'SUIT-Heavy',
-    fontSize: 21,
-    height: 26,
-    lineHeight: 26,
-    color: '#000',
+  Head1: css({
+    fontFamily: 'SUIT-SemiBold',
+    fontSize: 22,
+    lineHeight: 32,
+    letterSpacing: -0.13,
   }),
-  H2: css({
-    fontFamily: 'SUIT-Bold',
+  Title1: css({
+    fontFamily: 'SUIT-SemiBold',
     fontSize: 18,
-    height: 22,
-    lineHeight: 22,
-    color: '#000',
+    lineHeight: 26,
+    letterSpacing: -0.1,
   }),
-  B1: css({
+  Title2: css({
+    fontFamily: 'SUIT-SemiBold',
+    fontSize: 16,
+    lineHeight: 23,
+    letterSpacing: -0.95,
+  }),
+  Body1: css({
+    fontFamily: 'SUIT-Regular',
+    fontSize: 16,
+    lineHeight: 23,
+    letterSpacing: -0.95,
+  }),
+  Body2: css({
     fontFamily: 'SUIT-Regular',
     fontSize: 14,
-    height: 17,
-    lineHeight: 17,
-    color: '#000',
+    lineHeight: 20,
+    letterSpacing: -0.84,
   }),
-  B2: css({
-    fontFamily: 'SUIT-Regular',
+  Info: css({
+    fontFamily: 'SUIT-SemiBold',
     fontSize: 12,
-    height: 15,
-    lineHeight: 15,
-    color: '#000',
+    lineHeight: 17.5,
+    letterSpacing: -0.07,
   }),
 };
