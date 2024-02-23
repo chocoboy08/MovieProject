@@ -6770,6 +6770,11 @@ react-is@^17.0.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
+react-native-date-picker@^4.3.5:
+  version "4.3.5"
+  resolved "https://registry.yarnpkg.com/react-native-date-picker/-/react-native-date-picker-4.3.5.tgz#81797f874a34a75ce2ff57d2bb1519ee2ac062dd"
+  integrity sha512-jKOGCM2AUkRJb+tXYiwFHLfbB1Jh7OWXH4TxhLsuh7DWMXpWgUN3cGlFr3vl7G4wy45raAyPqmsZNSqmMr/98g==
+
 react-native-linear-gradient@^2.8.3:
   version "2.8.3"
   resolved "https://registry.yarnpkg.com/react-native-linear-gradient/-/react-native-linear-gradient-2.8.3.tgz#9a116649f86d74747304ee13db325e20b21e564f"

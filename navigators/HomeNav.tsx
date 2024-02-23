@@ -6,14 +6,18 @@ import {
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
 import AddRecord from '../screens/AddRecord';
+import Detail from '../screens/Detail';
 import Home from '../screens/Home';
 import Search from '../screens/Search';
+import Writting from '../screens/Writting';
 import {TabParamList} from './Main';
 
 export type HomeStackParamList = {
   Home: undefined;
   AddRecord: undefined;
   Search: undefined;
+  Detail: undefined;
+  Writting: undefined;
 };
 type HomeStackProps = {
   navigation: BottomTabNavigationProp<TabParamList, 'HomeNav'>;
@@ -28,7 +32,7 @@ function HomeNav({navigation, route}: HomeStackProps) {
       if (tabHiddenRoutes.includes(routeName)) {
         navigation.setOptions({tabBarStyle: {display: 'none'}});
       } else {
-        navigation.setOptions({tabBarStyle: {display: 'flex'}});
+        navigation.setOptions({tabBarStyle: {height: 67, display: 'flex'}});
       }
     }
   });
@@ -40,6 +44,8 @@ function HomeNav({navigation, route}: HomeStackProps) {
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="AddRecord" component={AddRecord} />
       <Stack.Screen name="Search" component={Search} />
+      <Stack.Screen name="Detail" component={Detail} />
+      <Stack.Screen name="Writting" component={Writting} />
     </Stack.Navigator>
   );
 }
