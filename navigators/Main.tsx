@@ -22,7 +22,7 @@ function Main() {
         headerShown: false,
         tabBarActiveTintColor: '#6F00F8',
         tabBarInactiveTintColor: '#C3C3C3',
-        tabBarStyle: {height: 68},
+        tabBarStyle: {height: 67},
         tabBarItemStyle: {paddingTop: 10},
         tabBarLabelStyle: {paddingBottom: 14},
         tabBarHideOnKeyboard: true,
