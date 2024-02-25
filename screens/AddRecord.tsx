@@ -2,20 +2,13 @@ import {css} from '@emotion/native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React from 'react';
-import {
-  Dimensions,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import {Dimensions, Image, Pressable, ScrollView, View} from 'react-native';
 import IconSearch from '../assets/icon_search.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
+import Typography from '../components/@base/Typography';
 import SeeMore from '../components/SeeMore';
 import {HomeStackParamList} from '../navigators/HomeNav';
-import {Fonts} from '../utils/fontStyle';
 import {mockData} from '../utils/mockData';
 
 const styles = {
@@ -57,12 +50,12 @@ function AddRecord() {
     <ScrollView style={{gap: 14}}>
       <Stack style={styles.pageTop.wrapper} align="center" justify="flex-end">
         <Stack>
-          <Text style={[Fonts.H2, {color: '#2d3540'}]}>
+          <Typography variant="Head1" color="#2d3540">
             새로운 기록 추가하기
-          </Text>
-          <Text style={[Fonts.B2, {color: '#2d3540', marginTop: 4}]}>
+          </Typography>
+          <Typography variant="Body2" color="#2d3540">
             어떤 영화를 기록해 볼까요?
-          </Text>
+          </Typography>
           <Group style={styles.pageTop.search.box} align="center">
             <IconSearch style={{position: 'absolute', left: 15}} />
             <Pressable
@@ -71,9 +64,9 @@ function AddRecord() {
                 navigation.navigate('Search');
               }}
             >
-              <Text style={[Fonts.B2, {color: '#747F8E'}]}>
+              <Typography variant="Body2" color="#747f8e">
                 영화 및 인물을 검색해보세요
-              </Text>
+              </Typography>
             </Pressable>
           </Group>
         </Stack>
@@ -81,7 +74,7 @@ function AddRecord() {
       <Stack style={styles.pageBottom.wrapper}>
         <Stack spacing={10} style={{marginTop: 13}} align="center">
           <Group gap={140}>
-            <Text style={Fonts.H2}>최근 검색한 영화</Text>
+            <Typography variant="Title1">최근 검색한 영화</Typography>
             <SeeMore />
           </Group>
           <View style={{height: 116}}>
@@ -95,20 +88,26 @@ function AddRecord() {
             >
               {mockData.results.map((item) => {
                 return (
-                  <Image
-                    src={
-                      'https://image.tmdb.org/t/p/original' + item.poster_path
-                    }
-                    style={styles.pageBottom.recentMovie}
-                    key={`recent-list-${item.title}`}
-                  />
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate('Detail');
+                    }}
+                  >
+                    <Image
+                      src={
+                        'https://image.tmdb.org/t/p/original' + item.poster_path
+                      }
+                      style={styles.pageBottom.recentMovie}
+                      key={`recent-list-${item.title}`}
+                    />
+                  </Pressable>
                 );
               })}
             </ScrollView>
           </View>
           <Stack>
             <Group position="apart" style={{width: 300}}>
-              <Text style={[Fonts.H2]}>인기 영화</Text>
+              <Typography variant="Title1">인기 영화</Typography>
               <SeeMore />
             </Group>
             <Stack>
@@ -129,10 +128,10 @@ function AddRecord() {
                         key={`recent-list-${item.title}`}
                       />
                       <Stack>
-                        <Text style={[Fonts.B1]}>{item.title}</Text>
-                        <Text style={[Fonts.B2, {color: '#a4a4a4'}]}>
+                        <Typography variant="Title2">{item.title}</Typography>
+                        <Typography variant="Body2" color="#a4a4a4">
                           한국 · 2023 · 김성수
-                        </Text>
+                        </Typography>
                       </Stack>
                     </Group>
                     <View style={{borderColor: '#e3e3e3', borderWidth: 0.25}} />

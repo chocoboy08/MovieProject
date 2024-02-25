@@ -2,13 +2,12 @@
 import {css} from '@emotion/native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React, {useState} from 'react';
+import React from 'react';
 import {
   Image,
   ImageBackground,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
 
@@ -16,6 +15,7 @@ import IconPlus from '../assets/icon_plus.svg';
 import IconSearch from '../assets/icon_search.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
+import Typography from '../components/@base/Typography';
 import SeeMore from '../components/SeeMore';
 import {HomeStackParamList} from '../navigators/HomeNav';
 import {Fonts} from '../utils/fontStyle';
@@ -37,7 +37,7 @@ const styles = {
         height: 32,
         marginTop: 59,
       }),
-      input: css(Fonts.B2, {
+      input: css(Fonts.Body2, {
         color: '#747F8E',
         paddingLeft: 103,
         width: '100%',
@@ -76,12 +76,7 @@ const styles = {
 };
 type HomeScreenProps = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
 function Home() {
-  const [search, setSearch] = useState('');
   const navigation = useNavigation<HomeScreenProps>();
-
-  const handleSearch = (text: string) => {
-    setSearch(text);
-  };
   return (
     <Stack align="center" style={{backgroundColor: '#fff'}}>
       <Stack style={styles.banner.background}>
@@ -111,9 +106,9 @@ function Home() {
                 navigation.navigate('Search');
               }}
             >
-              <Text style={[Fonts.B2, {color: '#737f8e'}]}>
+              <Typography variant="Body2" color="#737f8e">
                 기록할 영화를 검색하세요!
-              </Text>
+              </Typography>
             </Pressable>
           </Group>
           <Group
@@ -145,16 +140,9 @@ function Home() {
             style={styles.banner.addRecordBtn}
           >
             <Group align="center" gap={4}>
-              <Text
-                style={[
-                  Fonts.B2,
-                  {
-                    color: '#fff',
-                  },
-                ]}
-              >
+              <Typography variant="Body2" color="#fff">
                 새로운 기록 추가하기
-              </Text>
+              </Typography>
               <IconPlus fill={'#fff'} />
             </Group>
           </Pressable>
@@ -178,16 +166,9 @@ function Home() {
             alignItems: 'center',
           }}
         >
-          <Text
-            style={[
-              Fonts.H2,
-              {
-                color: '#2D3540',
-              },
-            ]}
-          >
+          <Typography variant="Title1" color="#2D3540">
             인기 한국 작품을 기록해 볼까요?
-          </Text>
+          </Typography>
           <SeeMore link="인기 작품" />
         </Group>
         <ScrollView
@@ -197,24 +178,19 @@ function Home() {
         >
           {mockData.results.map((item) => {
             return (
-              <Pressable onPress={() => {}}>
+              <Pressable
+                onPress={() => {
+                  navigation.navigate('Detail');
+                }}
+              >
                 <Image
                   src={'https://image.tmdb.org/t/p/original' + item.poster_path}
                   style={styles.movieInfoList.poster}
                   key={`popular-list-${item.title}`}
                 />
-                <Text
-                  style={[
-                    Fonts.B2,
-                    {
-                      color: '#000',
-                      width: 125,
-                      marginTop: 8,
-                    },
-                  ]}
-                >
+                <Typography variant="Body2" color="#000">
                   {item.title}
-                </Text>
+                </Typography>
               </Pressable>
             );
           })}

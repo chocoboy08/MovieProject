@@ -1,10 +1,11 @@
 /* eslint-disable react-native/no-inline-styles */
 import {useNavigation} from '@react-navigation/native';
 import React, {useState} from 'react';
-import {Image, Pressable, ScrollView, Text, TextInput} from 'react-native';
+import {Image, Pressable, ScrollView, TextInput} from 'react-native';
 import IconSearch from '../assets/icon_search.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
+import Typography from '../components/@base/Typography';
 import {mockData} from '../utils/mockData';
 
 function Search() {
@@ -44,7 +45,9 @@ function Search() {
             navigation.goBack();
           }}
         >
-          <Text style={{color: '#6F00F8'}}>취소</Text>
+          <Typography variant="Info" color="#6F00F8">
+            취소
+          </Typography>
         </Pressable>
       </Group>
       <Stack
@@ -79,18 +82,10 @@ function Search() {
                 }}
                 spacing={3}
               >
-                <Text
-                  style={{
-                    fontFamily: 'SUIT-Regular',
-                    fontSize: 16,
-                    color: 'black',
-                  }}
-                >
+                <Typography variant="Title2" color="#000">
                   {item.title}
-                </Text>
-                <Text style={{fontFamily: 'SUIT-Regular', fontSize: 12}}>
-                  2020.제임스
-                </Text>
+                </Typography>
+                <Typography variant="Body2">2020.제임스</Typography>
               </Stack>
             </Pressable>
           ) : (
@@ -105,12 +100,11 @@ function Search() {
                 borderColor: '#CBCBCB',
               }}
               key={`autocomplete-${item.title}-${idx}`}
-              onPress={() => {
-                // setSearchItem(item.title);
-              }}
             >
               <IconSearch />
-              <Text style={{color: '#454545'}}>{item.title}</Text>
+              <Typography variant="Body2" style={{color: '#454545'}}>
+                {item.title}
+              </Typography>
             </Pressable>
           );
         })}
