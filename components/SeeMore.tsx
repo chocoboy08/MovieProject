@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
-import {Pressable, Text} from 'react-native';
+import {Pressable} from 'react-native';
 import IconRight from '../assets/icon_right.svg';
-import {Fonts} from '../utils/fontStyle';
+import Typography from './@base/Typography';
 import React = require('react');
 interface SeeMoreProps {
   link?: string;
@@ -15,7 +15,9 @@ function SeeMore({link}: SeeMoreProps) {
         console.log(link);
       }}
     >
-      <Text style={[Fonts.B2, {color: '#6F00F8'}]}>더보기</Text>
+      <Typography variant="Info" color="#6f00f8">
+        더보기
+      </Typography>
       <IconRight fill={'#6F00F8'} />
     </Pressable>
   );
