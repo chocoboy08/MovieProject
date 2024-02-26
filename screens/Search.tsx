@@ -69,6 +69,7 @@ function Search() {
                 borderBottomWidth: 0.5,
                 borderColor: '#e3e3e3',
               }}
+              key={`search-list-movie-${item.id}`}
             >
               <Image
                 src={'https://image.tmdb.org/t/p/original' + item.poster_path}

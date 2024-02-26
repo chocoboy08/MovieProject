@@ -163,6 +163,7 @@ function Detail({navigation}: DetailScreenProps) {
                         }),
                       );
                     }}
+                    key={`keyword-${item.content}`}
                   />
                 ))}
               </View>
