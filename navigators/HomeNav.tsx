@@ -23,11 +23,11 @@ type HomeStackProps = {
   navigation: BottomTabNavigationProp<TabParamList, 'HomeNav'>;
   route: RouteProp<TabParamList, 'HomeNav'>;
 };
-const Stack = createNativeStackNavigator<HomeStackParamList>();
+const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 function HomeNav({navigation, route}: HomeStackProps) {
+  const tabHiddenRoutes = ['Search', 'AddRecord'];
+  const routeName = getFocusedRouteNameFromRoute(route);
   React.useLayoutEffect(() => {
-    const tabHiddenRoutes = ['Search', 'AddRecord'];
-    const routeName = getFocusedRouteNameFromRoute(route);
     if (routeName) {
       if (tabHiddenRoutes.includes(routeName)) {
         navigation.setOptions({tabBarStyle: {display: 'none'}});
@@ -37,16 +37,16 @@ function HomeNav({navigation, route}: HomeStackProps) {
     }
   });
   return (
-    <Stack.Navigator
+    <HomeStack.Navigator
       screenOptions={{headerShown: false}}
       initialRouteName="Home"
     >
-      <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="AddRecord" component={AddRecord} />
-      <Stack.Screen name="Search" component={Search} />
-      <Stack.Screen name="Detail" component={Detail} />
-      <Stack.Screen name="Writting" component={Writting} />
-    </Stack.Navigator>
+      <HomeStack.Screen name="Home" component={Home} />
+      <HomeStack.Screen name="AddRecord" component={AddRecord} />
+      <HomeStack.Screen name="Search" component={Search} />
+      <HomeStack.Screen name="Detail" component={Detail} />
+      <HomeStack.Screen name="Writting" component={Writting} />
+    </HomeStack.Navigator>
   );
 }
 
