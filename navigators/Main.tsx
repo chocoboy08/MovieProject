@@ -6,6 +6,7 @@ import IconHome from '../assets/icon_home.svg';
 import IconProfile from '../assets/icon_profile.svg';
 import Home from '../screens/Home';
 import HomeNav from './HomeNav';
+import StorageNav from './StorageNav';
 
 export type TabParamList = {
   HomeNav: undefined;
@@ -42,7 +43,7 @@ function Main() {
 
       <Tab.Screen
         name="StorageNav"
-        component={Home}
+        component={StorageNav}
         options={{
           tabBarIcon: ({color}) => {
             return <IconFolder fill={color} />;

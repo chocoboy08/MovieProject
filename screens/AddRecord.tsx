@@ -92,6 +92,7 @@ function AddRecord() {
                     onPress={() => {
                       navigation.navigate('Detail');
                     }}
+                    key={`recent-search-movie-${item.id}`}
                   >
                     <Image
                       src={
@@ -113,7 +114,7 @@ function AddRecord() {
             <Stack>
               {mockData.results.map((item) => {
                 return (
-                  <>
+                  <View key={`add-popular-movie-${item.id}`}>
                     <Group
                       align="flex-start"
                       gap={10}
@@ -135,7 +136,7 @@ function AddRecord() {
                       </Stack>
                     </Group>
                     <View style={{borderColor: '#e3e3e3', borderWidth: 0.25}} />
-                  </>
+                  </View>
                 );
               })}
             </Stack>
