@@ -123,9 +123,7 @@ function Home() {
               {mockData.results.map((item) => {
                 return (
                   <Image
-                    src={
-                      'https://image.tmdb.org/t/p/original' + item.poster_path
-                    }
+                    src={item.poster_path}
                     style={{width: 108, height: 165, borderRadius: 5}}
                     key={`popular-list-${item.title}`}
                   />
@@ -185,7 +183,7 @@ function Home() {
                 key={`home-popular-korea-movie-${item.id}`}
               >
                 <Image
-                  src={'https://image.tmdb.org/t/p/original' + item.poster_path}
+                  src={item.poster_path}
                   style={styles.movieInfoList.poster}
                   key={`popular-list-${item.title}`}
                 />

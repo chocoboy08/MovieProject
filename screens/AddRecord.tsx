@@ -95,9 +95,7 @@ function AddRecord() {
                     key={`recent-search-movie-${item.id}`}
                   >
                     <Image
-                      src={
-                        'https://image.tmdb.org/t/p/original' + item.poster_path
-                      }
+                      src={item.poster_path}
                       style={styles.pageBottom.recentMovie}
                       key={`recent-list-${item.title}`}
                     />
@@ -121,10 +119,7 @@ function AddRecord() {
                       style={{marginTop: 10, marginBottom: 10}}
                     >
                       <Image
-                        src={
-                          'https://image.tmdb.org/t/p/original' +
-                          item.poster_path
-                        }
+                        src={item.poster_path}
                         style={{width: 65, height: 89, borderRadius: 5}}
                         key={`recent-list-${item.title}`}
                       />
