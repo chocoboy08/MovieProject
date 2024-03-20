@@ -72,7 +72,7 @@ function Search() {
               key={`search-list-movie-${item.id}`}
             >
               <Image
-                src={'https://image.tmdb.org/t/p/original' + item.poster_path}
+                src={item.poster_path}
                 style={{width: 65, height: 89, borderRadius: 5}}
               />
               <Stack

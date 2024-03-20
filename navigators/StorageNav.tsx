@@ -16,7 +16,7 @@ export type StorageStackParamList = {
 
 type StorageNavProps = {
   navigation: BottomTabNavigationProp<TabParamList, 'StorageNav'>;
-  route: RouteProp<TabParamList, 'HomeNav'>;
+  route: RouteProp<TabParamList, 'StorageNav'>;
 };
 const StorageStack = createNativeStackNavigator<StorageStackParamList>();
 function StorageNav({navigation, route}: StorageNavProps) {

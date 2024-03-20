@@ -121,9 +121,7 @@ function StorageDetail() {
     setSelectedStorage(item);
     setModalOpen(false);
   };
-  const handleStorageModalOpen = () => {
-    setModalOpen((prev) => !prev);
-  };
+
   const handleSortMenuOpen = () => {
     setDropdownOpen((prev) => !prev);
   };
@@ -131,7 +129,9 @@ function StorageDetail() {
     setSelectedSorting(item);
     setDropdownOpen(false);
   };
-
+  const handleStorageModalOpen = () => {
+    setModalOpen((prev) => !prev);
+  };
   const handleDismiss = () => {
     closeAnim.start(handleStorageModalOpen);
   };
@@ -248,8 +248,7 @@ function StorageDetail() {
                   height={142}
                   radius={5}
                   img={{
-                    uri:
-                      'https://image.tmdb.org/t/p/original' + item.poster_path,
+                    uri: item.poster_path,
                   }}
                 />
                 <Typography variant="Info">{}</Typography>
