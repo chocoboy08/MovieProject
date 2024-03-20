@@ -5,6 +5,7 @@ import IconFolder from '../assets/icon_folder.svg';
 import IconHome from '../assets/icon_home.svg';
 import IconProfile from '../assets/icon_profile.svg';
 import Home from '../screens/Home';
+import CalendarNav from './CalendarNav';
 import HomeNav from './HomeNav';
 import StorageNav from './StorageNav';
 
@@ -53,7 +54,7 @@ function Main() {
       />
       <Tab.Screen
         name="CalendarNav"
-        component={Home}
+        component={CalendarNav}
         options={{
           tabBarIcon: ({color}) => {
             return <IconCalendar fill={color} />;
