@@ -136,6 +136,7 @@ function Detail({navigation}: DetailScreenProps) {
         visible={keywordOpen}
         onRequestClose={handleKeywordModalOpen}
         transparent={true}
+        statusBarTranslucent
       >
         <TouchableOpacity
           style={styles.keywordModal.wrapper}
@@ -296,7 +297,10 @@ function Detail({navigation}: DetailScreenProps) {
           {selectedKeywords.length !== 0 ? (
             <Group gap={8} style={{width: 300, flexWrap: 'wrap'}}>
               {selectedKeywords.map((item) => (
-                <Keywords keywordItem={item} />
+                <Keywords
+                  keywordItem={item}
+                  key={`${item.content}-selected-${item.selected}`}
+                />
               ))}
             </Group>
           ) : (
