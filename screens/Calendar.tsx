@@ -438,7 +438,7 @@ function Calendar() {
           <Typography variant="Title1">
             {date.format('YYYY년 M월 D일')}
           </Typography>
-          <SeeMore />
+          <SeeMore routeFn={() => {}} />
         </Group>
         <Stack
           style={{
@@ -449,7 +449,10 @@ function Calendar() {
         >
           {movies[date.format('YYYY-MM-DD')] !== undefined ? (
             movies[date.format('YYYY-MM-DD')]?.map((item) => (
-              <Pressable style={styles.selectedDate.box}>
+              <Pressable
+                style={styles.selectedDate.box}
+                key={`${item.id}-${item.title}-${item.watch_date}`}
+              >
                 <MoviePoster
                   width={63}
                   height={83}
