@@ -3,9 +3,11 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React from 'react';
 import {Pressable, ScrollView} from 'react-native';
+import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
+import SeeMore from '../components/SeeMore';
 import StorageBox from '../components/StorageBox';
 import {StorageStackParamList} from '../navigators/StorageNav';
 
@@ -72,7 +74,14 @@ function Storage() {
         </ScrollView>
       </Stack>
       <Stack style={styles.section} spacing={5}>
-        <Typography variant="Title2">나의 영화 플레이리스트</Typography>
+        <Group position="apart">
+          <Typography variant="Title2">나의 영화 플레이리스트</Typography>
+          <SeeMore
+            routeFn={() => {
+              navigation.navigate('PlayLists');
+            }}
+          />
+        </Group>
         <ScrollView
           horizontal
           contentContainerStyle={{gap: 10}}

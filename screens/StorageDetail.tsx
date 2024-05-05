@@ -1,4 +1,5 @@
 import {css} from '@emotion/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useEffect, useRef, useState} from 'react';
 import {
   Animated,
@@ -14,10 +15,13 @@ import IconArrowDown from '../assets/icon_arrow_down.svg';
 import IconCheck from '../assets/icon_check.svg';
 import IconDropDown from '../assets/icon_dropdown.svg';
 import IconFullStar from '../assets/icon_fullstar.svg';
+import IconMenu from '../assets/icon_hamburger.svg';
+import IconPlus from '../assets/icon_plus.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
+import {StorageStackParamList} from '../navigators/StorageNav';
 import {mockData} from '../utils/mockData';
 
 const SORTINGMENU = ['최신순', '오래된 순', '관람객 순', '별점 순'];
@@ -27,8 +31,16 @@ const styles = {
     width: '100%',
     paddingTop: 50,
     backgroundColor: '#fff',
-    paddingBottom: 20,
+    paddingBottom: 40,
   }),
+  menu: {
+    box: css({}),
+    divider: css({
+      width: 80,
+      height: 0.5,
+      backgroundColor: '#e2e2e2',
+    }),
+  },
   dropdown: {
     sortingMenu: css({
       paddingHorizontal: 10,
@@ -77,10 +89,17 @@ const styles = {
   },
 };
 
-function StorageDetail() {
+type StorageDetailScreenProps = NativeStackScreenProps<
+  StorageStackParamList,
+  'StorageDetail'
+>;
+
+function StorageDetail({navigation, route}: StorageDetailScreenProps) {
+  const params = route.params;
   const STORAGEMENU = ['나중에 볼 영화', '모든 영화', '액션', '2023 겨울 플리'];
   const [selectedSorting, setSelectedSorting] = useState('별점 순');
   const [selectedStorage, setSelectedStorage] = useState('모든 영화');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -168,6 +187,7 @@ function StorageDetail() {
                   onPress={() => {
                     handleStorageChange(item);
                   }}
+                  key={`storagemenu-${item}`}
                 >
                   <Group position="apart" align="center">
                     <Typography variant="Title1">{item}</Typography>
@@ -179,70 +199,103 @@ function StorageDetail() {
           </Animated.View>
         </Stack>
       </Modal>
-      <View>
-        <Pressable onPress={handleStorageModalOpen}>
-          <Group align="center" gap={10}>
-            <Typography variant="Title1">{selectedStorage}</Typography>
-            <IconArrowDown />
-          </Group>
-        </Pressable>
-      </View>
+      <Stack align="center" style={{width: 330}} spacing={25}>
+        <Group style={{width: '100%'}} position="center" align="center">
+          <Pressable onPress={handleStorageModalOpen}>
+            <Group align="center" gap={10}>
+              <Typography variant="Title1">{selectedStorage}</Typography>
+              <IconArrowDown />
+            </Group>
+          </Pressable>
+          <Pressable style={{position: 'absolute', right: 0}}>
+            <IconMenu />
+          </Pressable>
+        </Group>
+      </Stack>
       <ScrollView
-        style={{width: '100%'}}
-        contentContainerStyle={{width: '100%', alignItems: 'center'}}
+        contentContainerStyle={{width: 330, paddingTop: 25}}
+        showsVerticalScrollIndicator={false}
       >
-        <Stack spacing={30} style={{width: 327}}>
-          <Group position="apart" align="center">
-            <Typography variant="Info">5점만 보기</Typography>
-            <View style={{position: 'relative'}}>
-              <Pressable
-                style={styles.dropdown.sortingMenu}
-                onPress={handleSortMenuOpen}
+        <Group
+          position="apart"
+          align="center"
+          style={{width: '100%', marginBottom: 24}}
+        >
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              gap: 5,
+              width: 110,
+              paddingVertical: 6,
+              borderRadius: 20,
+              backgroundColor: '#6f00f8',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={() => {
+              navigation.navigate('AddMovies');
+            }}
+          >
+            <Typography variant="Info" color="#fff">
+              작품 추가하기
+            </Typography>
+            <IconPlus fill="#fff" />
+          </Pressable>
+          <View style={{position: 'relative'}}>
+            <Pressable
+              style={styles.dropdown.sortingMenu}
+              onPress={handleSortMenuOpen}
+            >
+              <Group gap={2} align="center">
+                <Typography variant="Info">{selectedSorting}</Typography>
+                <IconDropDown />
+              </Group>
+            </Pressable>
+            {dropdownOpen && (
+              <Shadow
+                style={styles.dropdown.wrapper}
+                containerStyle={{position: 'absolute', top: 37, right: -2}}
+                offset={[0, 2]}
+                startColor="rgba(0,0,0,0.1)"
               >
-                <Group gap={2} align="center">
-                  <Typography variant="Info">{selectedSorting}</Typography>
-                  <IconDropDown />
-                </Group>
-              </Pressable>
-              {dropdownOpen && (
-                <Shadow
-                  style={styles.dropdown.wrapper}
-                  containerStyle={{position: 'absolute', top: 43, right: -2}}
-                  offset={[0, 2]}
-                  startColor="rgba(0,0,0,0.1)"
-                >
-                  <Stack>
-                    {SORTINGMENU.map((item, idx) => (
-                      <Pressable
-                        onPress={() => {
-                          handleSortChange(item);
-                        }}
-                        style={[
-                          styles.dropdown.item,
-                          idx === 0 && {borderTopWidth: 0},
-                          item === selectedSorting && {
-                            backgroundColor: '#f2f3f5',
-                            borderTopRightRadius: idx === 0 ? 12 : 0,
-                            borderTopLeftRadius: idx === 0 ? 12 : 0,
-                            borderBottomRightRadius: idx === 3 ? 12 : 0,
-                            borderBottomLeftRadius: idx === 3 ? 12 : 0,
-                          },
-                        ]}
-                      >
-                        <Group position="apart">
-                          <Typography variant="Info">{item}</Typography>
-                          {item === selectedSorting && <IconCheck />}
-                        </Group>
-                      </Pressable>
-                    ))}
-                  </Stack>
-                </Shadow>
-              )}
-            </View>
-          </Group>
-          <Group gap={10} style={{width: 329, flexWrap: 'wrap'}}>
-            {mockData.results.map((item) => (
-              <Stack>
+                <Stack>
+                  {SORTINGMENU.map((item, idx) => (
+                    <Pressable
+                      onPress={() => {
+                        handleSortChange(item);
+                      }}
+                      style={[
+                        styles.dropdown.item,
+                        idx === 0 && {borderTopWidth: 0},
+                        item === selectedSorting && {
+                          backgroundColor: '#f2f3f5',
+                          borderTopRightRadius: idx === 0 ? 12 : 0,
+                          borderTopLeftRadius: idx === 0 ? 12 : 0,
+                          borderBottomRightRadius: idx === 3 ? 12 : 0,
+                          borderBottomLeftRadius: idx === 3 ? 12 : 0,
+                        },
+                      ]}
+                      key={`sortingmenu-${item}`}
+                    >
+                      <Group position="apart">
+                        <Typography variant="Info">{item}</Typography>
+                        {item === selectedSorting && <IconCheck />}
+                      </Group>
+                    </Pressable>
+                  ))}
+                </Stack>
+              </Shadow>
+            )}
+          </View>
+        </Group>
+        <Group style={{flexWrap: 'wrap'}} gap={10} position="left">
+          {mockData.results.map((item) => (
+            <Stack
+              style={{width: 103, marginBottom: 20}}
+              justify="space-between"
+              key={`playlist-${item.title}-${item.id}`}
+            >
+              <View>
                 <MoviePoster
                   width={103}
                   height={142}
@@ -251,17 +304,19 @@ function StorageDetail() {
                     uri: item.poster_path,
                   }}
                 />
-                <Typography variant="Info">{}</Typography>
-                <Group align="center" gap={2}>
-                  <IconFullStar width={13} />
-                  <Typography variant="Info" color="#6F00F8">
-                    {item.vote_average}
-                  </Typography>
-                </Group>
-              </Stack>
-            ))}
-          </Group>
-        </Stack>
+                <Typography variant="Info" numberOfLines={1}>
+                  {item.title}
+                </Typography>
+              </View>
+              <Group align="center" gap={2}>
+                <IconFullStar width={13} height={13} />
+                <Typography variant="Info" color="#6F00F8">
+                  {item.vote_average}
+                </Typography>
+              </Group>
+            </Stack>
+          ))}
+        </Group>
       </ScrollView>
     </Stack>
   );

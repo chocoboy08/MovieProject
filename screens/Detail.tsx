@@ -1,39 +1,46 @@
 import {css} from '@emotion/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
+  Animated,
+  Dimensions,
   ImageBackground,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
-  Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-
+import {Shadow} from 'react-native-shadow-2';
 import IconAddList from '../assets/icon_addlist.svg';
-import IconDown from '../assets/icon_arrow_down.svg';
+import {default as IconDown} from '../assets/icon_arrow_down.svg';
+import IconLogo from '../assets/icon_empty_logo.svg';
+import IconExit from '../assets/icon_exit.svg';
 import IconHeart from '../assets/icon_heart_fill.svg';
 import IconWatching from '../assets/icon_watching.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import Keywords, {KeywordProps} from '../components/Keywords';
+import MoviePoster from '../components/MoviePoster';
+import SeeMore from '../components/SeeMore';
 import StarRating from '../components/StartRating';
 import {HomeStackParamList} from '../navigators/HomeNav';
+import {mockPlaylist} from './PlayLists';
 
 const styles = {
   banner: {
     background: css({
       width: '100%',
-      height: 322,
       alignItems: 'center',
     }),
     blur: css({
       width: '100%',
-      height: 322,
+      height: '100%',
       backgroundColor: 'rgba(0,0,0,0.6)',
       position: 'absolute',
     }),
@@ -102,12 +109,65 @@ const styles = {
       borderRadius: 12,
     }),
   },
+  playlistModal: {
+    overlay: css({
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    }),
+    container: css({
+      marginTop: 80,
+      borderTopRightRadius: 10,
+      borderTopLeftRadius: 10,
+      backgroundColor: '#fff',
+    }),
+    divider: css({
+      width: '91%',
+      height: 1,
+      backgroundColor: '#e9e9e9',
+      marginTop: 15,
+    }),
+
+    item: {
+      wrapper: css({
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+      }),
+      selected: css({
+        borderColor: '#8f00ff',
+        borderWidth: 1,
+        borderRadius: 5,
+      }),
+      img: {
+        blur: css({
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          width: '100%',
+          height: '100%',
+          borderRadius: 10,
+          position: 'absolute',
+          zIndex: 1,
+        }),
+        none: css({
+          borderRadius: 10,
+          width: 101,
+          height: 101,
+          borderColor: '#e6e6e6',
+          borderWidth: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }),
+      },
+    },
+  },
 };
 type DetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, 'Detail'>;
 };
 
 function Detail({navigation}: DetailScreenProps) {
+  const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();
   const [date, setDate] = useState(new Date());
   const [dateOpen, setDateOpen] = useState(false);
   const [keywordOpen, setKeywordOpen] = useState(false);
@@ -125,17 +185,173 @@ function Detail({navigation}: DetailScreenProps) {
   const [rating, setRating] = useState(0);
   const selectedKeywords = keywords.filter((item) => item.selected);
   const [review, setReview] = useState('');
+  const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
+  const [addList, setAddList] = useState<number[]>([]);
 
   const handleKeywordModalOpen = () => {
     setKeywordOpen((prev) => !prev);
   };
 
+  const panY = useRef(
+    new Animated.Value(Dimensions.get('screen').height),
+  ).current;
+  const top = panY.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [0, 0, 1],
+  });
+  const resetPositionAnim = Animated.timing(panY, {
+    toValue: 0,
+    duration: 300,
+    useNativeDriver: false,
+  });
+
+  const closeAnim = Animated.timing(panY, {
+    toValue: Dimensions.get('screen').height,
+    duration: 200,
+    useNativeDriver: false,
+  });
+  const panResponders = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => false,
+      onPanResponderMove: Animated.event([null, {dy: panY}], {
+        useNativeDriver: false,
+      }),
+      onPanResponderRelease: (e, gs) => {
+        if (gs.dy > 0 && gs.vy > 2) {
+          return closeAnim.start(() => {
+            setPlaylistModalOpen(false);
+          });
+        }
+        return resetPositionAnim.start();
+      },
+    }),
+  ).current;
+  const handleDismiss = () => {
+    closeAnim.start(() => setPlaylistModalOpen(false));
+  };
+  useEffect(() => {
+    if (playlistModalOpen) resetPositionAnim.start();
+  }, [playlistModalOpen]);
   return (
     <ScrollView style={{backgroundColor: '#fff'}}>
+      <Modal
+        animationType="fade"
+        visible={playlistModalOpen}
+        transparent
+        onRequestClose={handleDismiss}
+        statusBarTranslucent
+      >
+        <Stack style={styles.playlistModal.overlay}>
+          <Animated.View
+            style={[styles.playlistModal.container, {top}]}
+            {...panResponders.panHandlers}
+          >
+            <Stack align="center">
+              <Group style={{marginTop: 20, width: '91%'}} position="apart">
+                <Stack>
+                  <Typography variant="Head1">
+                    플레이리스트에 영화 추가
+                  </Typography>
+                  <Typography variant="Info">
+                    영화를 추가하고 싶은 플레이리스트를 모두 선택해주세요
+                  </Typography>
+                </Stack>
+                <Pressable onPress={handleDismiss}>
+                  <IconExit />
+                </Pressable>
+              </Group>
+              <View style={styles.playlistModal.divider} />
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  width: deviceWidth,
+                }}
+              >
+                {mockPlaylist.map((item) => (
+                  <Pressable
+                    style={[
+                      styles.playlistModal.item.wrapper,
+                      addList.includes(item.id) &&
+                        styles.playlistModal.item.selected,
+                    ]}
+                    key={`playlist-${item.id}-${item.title}`}
+                    onPress={() => {
+                      if (addList.includes(item.id))
+                        setAddList(
+                          addList.filter((listItem) => listItem !== item.id),
+                        );
+                      else setAddList([...addList, item.id]);
+                    }}
+                  >
+                    <Group gap={10}>
+                      {item.img ? (
+                        <View>
+                          <View style={styles.playlistModal.item.img.blur} />
+                          <MoviePoster
+                            width={101}
+                            height={101}
+                            img={item.img}
+                            radius={10}
+                          />
+                        </View>
+                      ) : (
+                        <View style={styles.playlistModal.item.img.none}>
+                          <IconLogo />
+                        </View>
+                      )}
+                      <Stack justify="space-between">
+                        <Stack>
+                          <Group align="center" gap={5}>
+                            <Typography variant="Title1">
+                              {item.title}
+                            </Typography>
+                          </Group>
+                          <Typography variant="Info">{`1개 작품`}</Typography>
+                        </Stack>
+                        <SeeMore routeFn={() => {}} />
+                      </Stack>
+                    </Group>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              {addList.length !== 0 && (
+                <Shadow
+                  containerStyle={{
+                    position: 'absolute',
+                    right: 15,
+                    bottom: 95,
+                  }}
+                >
+                  <Pressable
+                    style={{
+                      width: deviceWidth * 0.36,
+                      height: deviceHeight * 0.05,
+                      borderRadius: deviceHeight * 0.025,
+                      backgroundColor: '#7a01f2',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                    onPress={() => {
+                      handleDismiss();
+                    }}
+                  >
+                    <Typography variant="Body2" color="#fff">
+                      완료
+                    </Typography>
+                  </Pressable>
+                </Shadow>
+              )}
+            </Stack>
+          </Animated.View>
+        </Stack>
+      </Modal>
       <Modal
         visible={keywordOpen}
         onRequestClose={handleKeywordModalOpen}
         transparent={true}
+        statusBarTranslucent
       >
         <TouchableOpacity
           style={styles.keywordModal.wrapper}
@@ -183,12 +399,10 @@ function Detail({navigation}: DetailScreenProps) {
       </Modal>
       <ImageBackground
         style={styles.banner.background}
-        source={{
-          uri: 'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-        }}
+        source={require('../assets/posters/avatar.jpeg')}
       >
         <View style={styles.banner.blur} />
-        <Stack style={{marginTop: 140}} align="center">
+        <Stack style={{marginTop: 140, marginBottom: 35}} align="center">
           <Typography variant="Head1" color="#fff">
             아바타: 물의 길
           </Typography>
@@ -203,6 +417,7 @@ function Detail({navigation}: DetailScreenProps) {
             {
               width: 320,
               textAlign: 'center',
+              marginBottom: 10,
             },
           ]}
         >
@@ -210,8 +425,12 @@ function Detail({navigation}: DetailScreenProps) {
           무자비한 위협과 살아남기 위해 떠나야 하는 긴 여정과 전투, 그리고
           견뎌내야 할 상처에 대한 이야기.
         </Typography>
-        <Pressable>
-          <Text>더보기</Text>
+        <Pressable
+          style={{marginBottom: 50, flexDirection: 'row', alignItems: 'center'}}
+        >
+          <Typography variant="Info" color="#bdbdbd">
+            더보기
+          </Typography>
         </Pressable>
       </ImageBackground>
       <Stack style={styles.bottom.wrapper}>
@@ -230,16 +449,22 @@ function Detail({navigation}: DetailScreenProps) {
           <Stack align="center" style={{paddingHorizontal: 14}}>
             <IconWatching fill="#acacac" />
             <Typography variant="Info" color="#acacac">
-              보는 중
+              봤어요
             </Typography>
           </Stack>
 
-          <Stack align="center" style={{paddingHorizontal: 14}}>
-            <IconAddList fill="#acacac" />
-            <Typography variant="Info" color="#acacac">
-              내 플레이리스트
-            </Typography>
-          </Stack>
+          <Pressable
+            onPress={() => {
+              setPlaylistModalOpen(true);
+            }}
+          >
+            <Stack align="center" style={{paddingHorizontal: 14}}>
+              <IconAddList fill="#acacac" />
+              <Typography variant="Info" color="#acacac">
+                내 플레이리스트
+              </Typography>
+            </Stack>
+          </Pressable>
         </Group>
         <View style={styles.bottom.divider} />
         <Group style={{marginTop: 10, marginBottom: 15}}>
@@ -296,7 +521,10 @@ function Detail({navigation}: DetailScreenProps) {
           {selectedKeywords.length !== 0 ? (
             <Group gap={8} style={{width: 300, flexWrap: 'wrap'}}>
               {selectedKeywords.map((item) => (
-                <Keywords keywordItem={item} />
+                <Keywords
+                  keywordItem={item}
+                  key={`${item.content}-selected-${item.selected}`}
+                />
               ))}
             </Group>
           ) : (

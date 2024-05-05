@@ -166,26 +166,41 @@ interface CalendarMovie {
 }
 
 const movies: CalendarMovie = {
-  '2024-03-01': [
+  '2024-04-01': [
     {
-      id: 9,
-      original_language: 'en',
-      original_title: 'Shark Bait',
+      id: 18,
+      original_language: 'no',
+      original_title: 'De uskyldige',
       overview:
-        '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
+        '이다와 안나는 새로운 아파트로 이사한 직후, 또래인 벤자민, 아이샤와 친구가 된다. 네 명의 아이들은 어른이 개입하지 않는 순간, 특별한 잠재력을 깨워나가기 시작하고 벤자민은 능력을 이용해 사람들을 조정할 수 있게 된다. 단순한 호기심과 장난으로 행해지던 어떤 일들이, 급기야 분노라는 감정과 이어지고 결국 친구들을 비롯해 주변에 위협을 가하기 시작하는 벤자민. 가장 순수하고, 본능적이었던, 그래서 더욱 파괴적이고 잔인할 수 있었던 잔혹한 동심의 세계가 펼쳐진다!',
       poster_path:
-        'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-03',
+        'https://image.tmdb.org/t/p/original/tNJ2oOuTPHny3x633DwwKDnc5mQ.jpg',
+      release_date: '2023-09-06',
       watch_date: '',
-      title: '47시간: 샤크베이트',
+      title: '이노센트',
       rating: 4,
     },
   ],
-  '2024-03-02': undefined,
-  '2024-03-03': undefined,
-  '2024-03-04': undefined,
-  '2024-03-05': undefined,
-  '2024-03-06': [
+  '2024-04-02': undefined,
+  '2024-04-03': undefined,
+  '2024-04-04': undefined,
+  '2024-04-05': undefined,
+  '2024-04-06': [
+    {
+      id: 19,
+      original_language: 'ko',
+      original_title: '콘크리트 유토피아',
+      overview:
+        '대지진으로 하루아침에 폐허가 된 서울. 모든 것이 무너졌지만 단 한 곳, 황궁 아파트만은 그대로다. 소문을 들은 외부 생존자들이 황궁 아파트로 몰려들자 위협을 느끼기 시작하는 입주민들. 생존을 위해 하나가 된 그들은 새로운 주민 대표 영탁을 중심으로 외부인의 출입을 철저히 막아선 채 아파트 주민만을 위한 새로운 규칙을 만든다. 덕분에 지옥 같은 바깥 세상과 달리 주민들에겐 더 없이 안전하고 평화로운 유토피아 황궁 아파트. 하지만 끝이 없는 생존의 위기 속 그들 사이에서도 예상치 못한 갈등이 시작되는데...',
+      poster_path:
+        'https://image.tmdb.org/t/p/original/9dENCKupUckoT1WgOohHMZfVl61.jpg',
+      release_date: '2023-08-04',
+      watch_date: '',
+      title: '콘크리트 유토피아',
+      rating: 3.5,
+    },
+  ],
+  '2024-04-07': [
     {
       id: 9,
       original_language: 'en',
@@ -194,13 +209,26 @@ const movies: CalendarMovie = {
         '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
       poster_path:
         'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-03',
+      release_date: '2023-08-04',
       watch_date: '',
       title: '47시간: 샤크베이트',
       rating: 3.5,
     },
   ],
-  '2024-03-07': [
+  '2024-04-08': [
+    {
+      id: 2,
+      original_language: 'en',
+      original_title: 'Oppenheimer',
+      overview:
+        '세상을 구하기 위해 세상을 파괴할 지도 모르는 선택을 해야 하는 천재 과학자의 핵개발 프로젝트.',
+      poster_path:
+        'https://image.tmdb.org/t/p/original/4ZLnVUfiCe3wX8Ut9eyujndpyvA.jpg',
+      release_date: '2023-08-15',
+      watch_date: '',
+      title: '오펜하이머',
+      rating: 4.5,
+    },
     {
       id: 9,
       original_language: 'en',
@@ -209,63 +237,34 @@ const movies: CalendarMovie = {
         '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
       poster_path:
         'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-03',
+      release_date: '2023-08-04',
       watch_date: '',
       title: '47시간: 샤크베이트',
       rating: 3.5,
     },
   ],
-  '2024-03-08': [
-    {
-      id: 9,
-      original_language: 'en',
-      original_title: 'Shark Bait',
-      overview:
-        '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-03',
-      watch_date: '',
-      title: '47시간: 샤크베이트',
-      rating: 3.5,
-    },
-    {
-      id: 9,
-      original_language: 'en',
-      original_title: 'Shark Bait',
-      overview:
-        '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-03',
-      watch_date: '',
-      title: '47시간: 샤크베이트',
-      rating: 3.5,
-    },
-  ],
-  '2024-03-09': undefined,
-  '2024-03-10': undefined,
-  '2024-03-11': undefined,
-  '2024-03-12': undefined,
-  '2024-03-13': undefined,
-  '2024-03-14': undefined,
-  '2024-03-15': undefined,
-  '2024-03-16': undefined,
-  '2024-03-17': undefined,
-  '2024-03-18': undefined,
-  '2024-03-19': undefined,
-  '2024-03-20': undefined,
-  '2024-03-21': undefined,
-  '2024-03-22': undefined,
-  '2024-03-23': undefined,
-  '2024-03-24': undefined,
-  '2024-03-25': undefined,
-  '2024-03-26': undefined,
-  '2024-03-27': undefined,
-  '2024-03-28': undefined,
-  '2024-03-29': undefined,
-  '2024-03-30': undefined,
-  '2024-03-31': undefined,
+  '2024-04-09': undefined,
+  '2024-04-10': undefined,
+  '2024-04-11': undefined,
+  '2024-04-12': undefined,
+  '2024-04-13': undefined,
+  '2024-04-14': undefined,
+  '2024-04-15': undefined,
+  '2024-04-16': undefined,
+  '2024-04-17': undefined,
+  '2024-04-18': undefined,
+  '2024-04-19': undefined,
+  '2024-04-20': undefined,
+  '2024-04-21': undefined,
+  '2024-04-22': undefined,
+  '2024-04-23': undefined,
+  '2024-04-24': undefined,
+  '2024-04-25': undefined,
+  '2024-04-26': undefined,
+  '2024-04-27': undefined,
+  '2024-04-28': undefined,
+  '2024-04-29': undefined,
+  '2024-04-30': undefined,
 };
 
 function Calendar() {
@@ -438,7 +437,7 @@ function Calendar() {
           <Typography variant="Title1">
             {date.format('YYYY년 M월 D일')}
           </Typography>
-          <SeeMore />
+          <SeeMore routeFn={() => {}} />
         </Group>
         <Stack
           style={{
@@ -449,7 +448,10 @@ function Calendar() {
         >
           {movies[date.format('YYYY-MM-DD')] !== undefined ? (
             movies[date.format('YYYY-MM-DD')]?.map((item) => (
-              <Pressable style={styles.selectedDate.box}>
+              <Pressable
+                style={styles.selectedDate.box}
+                key={`${item.id}-${item.title}-${item.watch_date}`}
+              >
                 <MoviePoster
                   width={63}
                   height={83}
