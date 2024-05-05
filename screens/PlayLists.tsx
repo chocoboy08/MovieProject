@@ -80,7 +80,7 @@ const styles = {
     }),
   },
 };
-const mockPlaylist = [
+export const mockPlaylist = [
   {
     title: '2023 가장 재밌게 본 영화',
     img: require('../assets/posters/avatar.jpeg'),

@@ -5,7 +5,6 @@ import {
 } from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
-import AddRecord from '../screens/AddRecord';
 import Detail from '../screens/Detail';
 import Home from '../screens/Home';
 import Search from '../screens/Search';
@@ -14,7 +13,6 @@ import {TabParamList} from './Main';
 
 export type HomeStackParamList = {
   Home: undefined;
-  AddRecord: undefined;
   Search: undefined;
   Detail: undefined;
   Writting: undefined;
@@ -42,7 +40,7 @@ function HomeNav({navigation, route}: HomeStackProps) {
       initialRouteName="Home"
     >
       <HomeStack.Screen name="Home" component={Home} />
-      <HomeStack.Screen name="AddRecord" component={AddRecord} />
+
       <HomeStack.Screen name="Search" component={Search} />
       <HomeStack.Screen name="Detail" component={Detail} />
       <HomeStack.Screen name="Writting" component={Writting} />
