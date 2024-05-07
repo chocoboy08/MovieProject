@@ -20,7 +20,7 @@ const Star = ({fill, half, onPress}: StarProps) => (
 
 interface StarRatingProps {
   rating: number;
-  setRating: React.Dispatch<React.SetStateAction<number>>;
+  setRating: (stars: number) => void;
 }
 const StarRating = ({rating, setRating}: StarRatingProps) => {
   const handlePress = (index: number) => (event: GestureResponderEvent) => {

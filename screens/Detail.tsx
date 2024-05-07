@@ -15,6 +15,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
+import LinearGradient from 'react-native-linear-gradient';
 import {Shadow} from 'react-native-shadow-2';
 import IconAddList from '../assets/icon_addlist.svg';
 import {default as IconDown} from '../assets/icon_arrow_down.svg';
@@ -41,7 +42,6 @@ const styles = {
     blur: css({
       width: '100%',
       height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.6)',
       position: 'absolute',
     }),
   },
@@ -165,10 +165,16 @@ const styles = {
 type DetailScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, 'Detail'>;
 };
-
+interface ReviewDataProps {
+  rating: number;
+  date: Date | undefined;
+  selectedKeywords: KeywordProps[];
+  review: string;
+}
 function Detail({navigation}: DetailScreenProps) {
   const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();
-  const [date, setDate] = useState(new Date());
+  const [watched, setWatched] = useState(false);
+  const [hearted, setHearted] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [keywordOpen, setKeywordOpen] = useState(false);
   const [keywords, setKeywords] = useState<KeywordProps[]>([
@@ -182,12 +188,37 @@ function Detail({navigation}: DetailScreenProps) {
     {selected: false, content: '눈물나는'},
     {selected: false, content: '팝콘각'},
   ]);
-  const [rating, setRating] = useState(0);
-  const selectedKeywords = keywords.filter((item) => item.selected);
-  const [review, setReview] = useState('');
+  const [reviewData, setReviewData] = useState<ReviewDataProps>({
+    rating: 0,
+    date: undefined,
+    selectedKeywords: [],
+    review: '',
+  });
+  const {rating, date, selectedKeywords, review} = reviewData;
+
   const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
   const [addList, setAddList] = useState<number[]>([]);
 
+  const handleWatchedClick = () => {
+    //봤어요 클릭
+    if (watched) {
+      setReviewData({
+        rating: 0,
+        date: undefined,
+        selectedKeywords: [],
+        review: '',
+      });
+      setWatched(false);
+    } else setWatched(true);
+  };
+  const handleHeartClick = () => {
+    //보고싶어요 클릭
+    setHearted((prev) => !prev);
+  };
+  const handleDateModalOpen = () => {
+    setReviewData({...reviewData, date: new Date()});
+    setDateOpen(true);
+  };
   const handleKeywordModalOpen = () => {
     setKeywordOpen((prev) => !prev);
   };
@@ -233,6 +264,12 @@ function Detail({navigation}: DetailScreenProps) {
   useEffect(() => {
     if (playlistModalOpen) resetPositionAnim.start();
   }, [playlistModalOpen]);
+  useEffect(() => {
+    setReviewData({
+      ...reviewData,
+      selectedKeywords: keywords.filter((item) => item.selected),
+    });
+  }, [keywords]);
   return (
     <ScrollView style={{backgroundColor: '#fff'}}>
       <Modal
@@ -401,7 +438,12 @@ function Detail({navigation}: DetailScreenProps) {
         style={styles.banner.background}
         source={require('../assets/posters/avatar.jpeg')}
       >
-        <View style={styles.banner.blur} />
+        <LinearGradient
+          colors={['rgba(0,0,0,0.5)', 'rgb(255,255,255)']}
+          start={{x: 0, y: 0.7}}
+          end={{x: 0, y: 1}}
+          style={styles.banner.blur}
+        />
         <Stack style={{marginTop: 140, marginBottom: 35}} align="center">
           <Typography variant="Head1" color="#fff">
             아바타: 물의 길
@@ -439,19 +481,29 @@ function Detail({navigation}: DetailScreenProps) {
           gap={36}
           style={{marginTop: 13, marginBottom: 7}}
         >
-          <Stack align="center" style={{paddingHorizontal: 14}}>
-            <IconHeart fill="#acacac" />
-            <Typography variant="Info" color="#acacac">
-              보고싶어요
-            </Typography>
-          </Stack>
+          <Pressable onPress={handleHeartClick}>
+            <Stack align="center" style={{paddingHorizontal: 14}}>
+              <IconHeart fill={hearted ? '#6f00f8' : '#acacac'} />
+              <Typography
+                variant="Info"
+                color={hearted ? '#6f00f8' : '#acacac'}
+              >
+                보고싶어요
+              </Typography>
+            </Stack>
+          </Pressable>
 
-          <Stack align="center" style={{paddingHorizontal: 14}}>
-            <IconWatching fill="#acacac" />
-            <Typography variant="Info" color="#acacac">
-              봤어요
-            </Typography>
-          </Stack>
+          <Pressable onPress={handleWatchedClick}>
+            <Stack align="center" style={{paddingHorizontal: 14}}>
+              <IconWatching fill={watched ? '#6f00f8' : '#acacac'} />
+              <Typography
+                variant="Info"
+                color={watched ? '#6f00f8' : '#acacac'}
+              >
+                봤어요
+              </Typography>
+            </Stack>
+          </Pressable>
 
           <Pressable
             onPress={() => {
@@ -468,29 +520,72 @@ function Detail({navigation}: DetailScreenProps) {
         </Group>
         <View style={styles.bottom.divider} />
         <Group style={{marginTop: 10, marginBottom: 15}}>
-          <Pressable
-            style={styles.bottom.datePicker}
-            onPress={() => {
-              setDateOpen(true);
-            }}
-          >
-            <Typography variant="Body1">{`${date.getFullYear()}년 ${date.getMonth()}월 ${date.getDate()}일`}</Typography>
-            <IconDown />
-          </Pressable>
-          <DatePicker
-            date={date}
-            modal
-            open={dateOpen}
-            onConfirm={(date) => {
-              setDate(date);
-              setDateOpen(false);
-            }}
-            onCancel={() => {
-              setDateOpen(false);
-            }}
-            locale="ko"
-            mode="date"
-          />
+          <Stack align="flex-start" spacing={13}>
+            <Group
+              align="flex-end"
+              position={date ? 'apart' : 'left'}
+              gap={5}
+              style={{width: '100%'}}
+            >
+              <Typography variant="Title1" color="#2d3540">
+                감상한 날짜
+              </Typography>
+              {date ? (
+                <Pressable
+                  style={styles.bottom.editBtn}
+                  onPress={() => {
+                    setReviewData({...reviewData, date: undefined});
+                  }}
+                >
+                  <Typography variant="Info" color="#ff0000">
+                    삭제
+                  </Typography>
+                </Pressable>
+              ) : (
+                <Typography variant="Info" color="#c3c3c3">
+                  아직 입력된 날짜가 없어요!
+                </Typography>
+              )}
+            </Group>
+            {date ? (
+              <Pressable
+                style={styles.bottom.datePicker}
+                onPress={() => {
+                  setDateOpen(true);
+                }}
+              >
+                <Typography variant="Body1">{`${date.getFullYear()}년 ${
+                  date.getMonth() + 1
+                }월 ${date.getDate()}일`}</Typography>
+                <IconDown />
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.bottom.addBtn}
+                onPress={handleDateModalOpen}
+              >
+                <Typography variant="Body2" color="#6f00f8">
+                  추가하기
+                </Typography>
+              </Pressable>
+            )}
+          </Stack>
+          {date && (
+            <DatePicker
+              date={date}
+              modal
+              open={dateOpen}
+              onConfirm={(date) => {
+                setReviewData({...reviewData, date: date});
+                setDateOpen(false);
+              }}
+              onCancel={() => {
+                setDateOpen(false);
+              }}
+              locale="ko"
+              mode="date"
+            />
+          )}
         </Group>
         <View style={styles.bottom.divider} />
         <Stack align="flex-start" spacing={13}>
@@ -551,7 +646,12 @@ function Detail({navigation}: DetailScreenProps) {
             )}
           </Group>
           <Group>
-            <StarRating rating={rating} setRating={setRating} />
+            <StarRating
+              rating={rating}
+              setRating={(stars) => {
+                setReviewData({...reviewData, rating: stars});
+              }}
+            />
           </Group>
         </Stack>
         <View style={styles.bottom.divider} />
