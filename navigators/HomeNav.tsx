@@ -7,11 +7,13 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
 import Detail from '../screens/Detail';
 import Home from '../screens/Home';
+import Login from '../screens/Login';
 import Search from '../screens/Search';
 import Writting from '../screens/Writting';
 import {TabParamList} from './Main';
 
 export type HomeStackParamList = {
+  Login: undefined;
   Home: undefined;
   Search: undefined;
   Detail: undefined;
@@ -39,8 +41,8 @@ function HomeNav({navigation, route}: HomeStackProps) {
       screenOptions={{headerShown: false}}
       initialRouteName="Home"
     >
+      <HomeStack.Screen name="Login" component={Login} />
       <HomeStack.Screen name="Home" component={Home} />
-
       <HomeStack.Screen name="Search" component={Search} />
       <HomeStack.Screen name="Detail" component={Detail} />
       <HomeStack.Screen name="Writting" component={Writting} />
