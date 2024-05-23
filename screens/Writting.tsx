@@ -8,6 +8,7 @@ import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import {HomeStackParamList} from '../navigators/HomeNav';
 import {Fonts} from '../utils/fontStyle';
+import {mockData} from '../utils/mockData';
 
 type WrittingScreenProps = {
   navigation: NativeStackNavigationProp<HomeStackParamList, 'Writting'>;
@@ -78,8 +79,12 @@ function Writting({navigation}: WrittingScreenProps) {
       </Group>
       <ScrollView style={styles.contentWrapper}>
         <Stack style={styles.title}>
-          <Typography variant="Title1">서울의 봄</Typography>
-          <Typography variant="Info">12:12 THE DAY</Typography>
+          <Typography variant="Title1">
+            {mockData[1].results[0].title}
+          </Typography>
+          <Typography variant="Info">
+            {mockData[1].results[0].original_title}
+          </Typography>
         </Stack>
         <Stack>
           <Text>{date}</Text>

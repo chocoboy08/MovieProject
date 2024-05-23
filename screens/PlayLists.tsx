@@ -82,13 +82,13 @@ const styles = {
 };
 export const mockPlaylist = [
   {
-    title: '2023 가장 재밌게 본 영화',
+    title: '2024 가장 재밌게 본',
     img: require('../assets/posters/avatar.jpeg'),
     id: 0,
-    number: 3,
+    number: 1,
   },
-  {title: '2023 노잼 영화', img: '', id: 1, number: 0},
-  {title: '겨울에 보고싶은 영화', img: '', id: 2, number: 0},
+
+  {title: '겨울에 보고싶은 영화', img: '', id: 1, number: 0},
 ];
 type PlayListsScreenProps = {
   navigation: NativeStackNavigationProp<StorageStackParamList, 'PlayLists'>;
@@ -256,7 +256,7 @@ function PlayLists({navigation}: PlayListsScreenProps) {
                     alignItems: 'center',
                   }}
                 >
-                  <IconLogo />
+                  <IconLogo fill="#e6e6e6" />
                 </View>
               )}
               <Stack justify="space-between">
