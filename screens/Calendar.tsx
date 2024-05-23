@@ -1,4 +1,5 @@
 import {css} from '@emotion/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import moment from 'moment';
 import React, {useEffect, useRef, useState} from 'react';
 import {
@@ -20,6 +21,7 @@ import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
 import SeeMore from '../components/SeeMore';
+import {CalendarStackParamList} from '../navigators/CalendarNav';
 
 const styles = {
   wrapper: css({
@@ -44,7 +46,6 @@ const styles = {
         alignItems: 'center',
         borderTopColor: '#d1d1d1',
         borderTopWidth: 0.5,
-        marginBottom: -13,
       }),
       poster: css({
         width: '100%',
@@ -165,20 +166,19 @@ interface CalendarMovie {
   [date: string]: Movie[] | undefined;
 }
 
-const movies: CalendarMovie = {
+export const MonthlyMovieData: CalendarMovie = {
   '2024-04-01': [
     {
-      id: 18,
-      original_language: 'no',
-      original_title: 'De uskyldige',
+      id: 634492,
+      original_language: 'en',
+      original_title: 'Madame Web',
       overview:
-        '이다와 안나는 새로운 아파트로 이사한 직후, 또래인 벤자민, 아이샤와 친구가 된다. 네 명의 아이들은 어른이 개입하지 않는 순간, 특별한 잠재력을 깨워나가기 시작하고 벤자민은 능력을 이용해 사람들을 조정할 수 있게 된다. 단순한 호기심과 장난으로 행해지던 어떤 일들이, 급기야 분노라는 감정과 이어지고 결국 친구들을 비롯해 주변에 위협을 가하기 시작하는 벤자민. 가장 순수하고, 본능적이었던, 그래서 더욱 파괴적이고 잔인할 수 있었던 잔혹한 동심의 세계가 펼쳐진다!',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/tNJ2oOuTPHny3x633DwwKDnc5mQ.jpg',
-      release_date: '2023-09-06',
+        "우연한 사고로 미래를 볼 수 있게 된 구급대원 '캐시 웹'이 거미줄처럼 엮인 운명을 마주하며, 같은 예지 능력을 가진 적 '심스'에 맞서 세상을 구할 히어로 '마담 웹'으로 거듭나게 되는 과정을 그린 마블의 NEW 히어로 드라마",
       watch_date: '',
-      title: '이노센트',
-      rating: 4,
+      poster_path: '/eqEzpQNusV9XSdnA9HAvlLMeuPs.jpg',
+      release_date: '2024-02-14',
+      title: '마담 웹',
+      rating: 3.5,
     },
   ],
   '2024-04-02': undefined,
@@ -192,8 +192,7 @@ const movies: CalendarMovie = {
       original_title: '콘크리트 유토피아',
       overview:
         '대지진으로 하루아침에 폐허가 된 서울. 모든 것이 무너졌지만 단 한 곳, 황궁 아파트만은 그대로다. 소문을 들은 외부 생존자들이 황궁 아파트로 몰려들자 위협을 느끼기 시작하는 입주민들. 생존을 위해 하나가 된 그들은 새로운 주민 대표 영탁을 중심으로 외부인의 출입을 철저히 막아선 채 아파트 주민만을 위한 새로운 규칙을 만든다. 덕분에 지옥 같은 바깥 세상과 달리 주민들에겐 더 없이 안전하고 평화로운 유토피아 황궁 아파트. 하지만 끝이 없는 생존의 위기 속 그들 사이에서도 예상치 못한 갈등이 시작되는데...',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/9dENCKupUckoT1WgOohHMZfVl61.jpg',
+      poster_path: '/9dENCKupUckoT1WgOohHMZfVl61.jpg',
       release_date: '2023-08-04',
       watch_date: '',
       title: '콘크리트 유토피아',
@@ -202,17 +201,16 @@ const movies: CalendarMovie = {
   ],
   '2024-04-07': [
     {
-      id: 9,
+      id: 1011985,
       original_language: 'en',
-      original_title: 'Shark Bait',
+      original_title: 'Kung Fu Panda 4',
       overview:
-        '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-04',
+        '마침내 내면의 평화… 냉면의 평화…가 찾아왔다고 믿는 용의 전사 ‘포’ 이젠 평화의 계곡의 영적 지도자가 되고, 자신을 대신할 후계자를 찾아야만 한다. “이제 용의 전사는 그만둬야 해요?” 용의 전사로의 모습이 익숙해지고 새로운 성장을 하기보다 지금 이대로가 좋은 ‘포’ 하지만 모든 쿵푸 마스터들의 능력을 그대로 복제하는 강력한 빌런 ‘카멜레온’이 나타나고 그녀를 막기 위해 정체를 알 수 없는 쿵푸 고수 ‘젠’과 함께 모험을 떠나게 되는데… 포는 가장 강력한 빌런과 자기 자신마저 뛰어넘고 진정한 변화를 할 수 있을까?',
       watch_date: '',
-      title: '47시간: 샤크베이트',
-      rating: 3.5,
+      rating: 4.5,
+      poster_path: '/1ZNOOMmILNUzVYbzG1j7GYb5bEV.jpg',
+      release_date: '2024-03-02',
+      title: '쿵푸팬더 4',
     },
   ],
   '2024-04-08': [
@@ -222,25 +220,23 @@ const movies: CalendarMovie = {
       original_title: 'Oppenheimer',
       overview:
         '세상을 구하기 위해 세상을 파괴할 지도 모르는 선택을 해야 하는 천재 과학자의 핵개발 프로젝트.',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/4ZLnVUfiCe3wX8Ut9eyujndpyvA.jpg',
+      poster_path: '/4ZLnVUfiCe3wX8Ut9eyujndpyvA.jpg',
       release_date: '2023-08-15',
-      watch_date: '',
       title: '오펜하이머',
+      watch_date: '',
       rating: 4.5,
     },
     {
-      id: 9,
+      id: 748783,
       original_language: 'en',
-      original_title: 'Shark Bait',
+      original_title: 'The Garfield Movie',
       overview:
-        '마지막 봄 방학을 기념하러 해변에서 파티를 벌이던 젊은이들은 우연히 주인 없이 방치된 제트스키 두 대를 발견하고 키를 훔친다. 그들은 제트스키가 처참한 결과를 몰고 올 재앙의 원인이 될지 모른 채 승선한다. 철없는 치킨게임을 하다 고장 난 제트스키는 바다 한 가운데 고립되고 거대한 백상어의 그림자가 서서히 그들 주위를 맴돈다. 상어의 희생자가 한 명씩 늘어가는 가운데 남은 사람들은 해변으로 돌아가기 위해 고군분투한다.',
-      poster_path:
-        'https://image.tmdb.org/t/p/original/pxsn8GtNHbN01iWkD2cV8CMuGzm.jpg',
-      release_date: '2023-08-04',
+        '세상귀찮 집냥이, 바쁘고 험난한 세상에 던져졌다! 집사 ‘존’과 반려견 ‘오디’를 기르며 평화로운 나날을 보내던 집냥이 ‘가필드’. 어느 날, 험악한 길냥이 무리에게 납치당해 냉혹한 거리로 던져진다. 돌봐주는 집사가 없는 집 밖 세상은 너무나도 정신없게 돌아가고 길에서 우연히 다시 만난 아빠 길냥이 ‘빅’은 오히려 ‘가필드’를 위기에 빠지게 하는데… 험난한 세상, 살아남아야 한다!',
       watch_date: '',
-      title: '47시간: 샤크베이트',
-      rating: 3.5,
+      rating: 4.5,
+      poster_path: '/57g3pHYi3p0JNVO1LkcyYbeMDBf.jpg',
+      release_date: '2024-04-30',
+      title: '가필드 더 무비',
     },
   ],
   '2024-04-09': undefined,
@@ -252,7 +248,20 @@ const movies: CalendarMovie = {
   '2024-04-15': undefined,
   '2024-04-16': undefined,
   '2024-04-17': undefined,
-  '2024-04-18': undefined,
+  '2024-04-18': [
+    {
+      id: 693134,
+      original_language: 'en',
+      original_title: 'Dune: Part Two',
+      overview:
+        '황제의 모략으로 멸문한 가문의 유일한 후계자 폴. 어머니 레이디 제시카와 간신히 목숨만 부지한 채 사막으로 도망친다. 그곳에서 만난 반란군들과 숨어 지내다 그들과 함께 황제의 모든 것을 파괴할 전투를 준비한다. 한편 반란군들의 기세가 높아질수록 불안해진 황제와 귀족 가문은 잔혹한 암살자 페이드 로타를 보내 반란군을 몰살하려 하는데…',
+      watch_date: '',
+      rating: 4.5,
+      poster_path: '/8uUU2pxm6IYZw8UgnKJyx7Dqwu9.jpg',
+      release_date: '2024-02-27',
+      title: '듄: 파트 2',
+    },
+  ],
   '2024-04-19': undefined,
   '2024-04-20': undefined,
   '2024-04-21': undefined,
@@ -267,7 +276,10 @@ const movies: CalendarMovie = {
   '2024-04-30': undefined,
 };
 
-function Calendar() {
+type CalendarScreenProp = {
+  navigation: NativeStackNavigationProp<CalendarStackParamList, 'Calendar'>;
+};
+function Calendar({navigation}: CalendarScreenProp) {
   const [date, setDate] = useState(moment());
   const [dateModalOpen, setDateModalOpen] = useState(false);
 
@@ -364,6 +376,7 @@ function Calendar() {
       </Modal>
       <MovieCalendar
         style={styles.calendar.wrapper}
+        theme={{weekVerticalMargin: 0}}
         hideArrows
         current={date.format('YYYY-MM-DD')}
         key={date.format('YYYY-MM-DD')}
@@ -379,29 +392,40 @@ function Calendar() {
         )}
         dayComponent={(e) => (
           <Pressable
-            style={styles.calendar.date.box}
+            style={[
+              styles.calendar.date.box,
+              date.format('YYYY-MM-DD') === e.date?.dateString && {
+                borderWidth: 1,
+                borderRadius: 5,
+                borderColor: '#6f00f8',
+              },
+            ]}
             onPress={() => {
               if (e.date?.month === date.month() + 1)
                 setDate(moment(e.date?.dateString));
             }}
           >
-            {movies[e.date?.dateString as string] !== undefined && (
+            {MonthlyMovieData[e.date?.dateString as string] !== undefined && (
               <ImageBackground
                 source={{
-                  uri: movies[e.date?.dateString!]![0].poster_path,
+                  uri:
+                    'https://image.tmdb.org/t/p/original' +
+                    MonthlyMovieData[e.date?.dateString!]![0].poster_path,
                 }}
                 imageStyle={{borderRadius: 5}}
                 style={styles.calendar.date.poster}
               >
                 <View style={styles.calendar.date.blur} />
-                {movies[e.date?.dateString as string]!.length > 1 && (
+                {MonthlyMovieData[e.date?.dateString as string]!.length > 1 && (
                   <View style={styles.calendar.date.more}>
                     <Typography
                       variant="Info"
                       color="#d8d8d8"
                       style={{lineHeight: 12}}
                     >
-                      +{movies[e.date?.dateString as string]!.length - 1}
+                      +
+                      {MonthlyMovieData[e.date?.dateString as string]!.length -
+                        1}
                     </Typography>
                   </View>
                 )}
@@ -423,7 +447,12 @@ function Calendar() {
               {e.date?.month === date.month() + 1 && (
                 <Typography
                   variant="Info"
-                  color={movies[e.date?.dateString as string] ? '#fff' : '#000'}
+                  color={
+                    MonthlyMovieData[e.date?.dateString as string] ||
+                    e.date?.dateString === moment().format('YYYY-MM-DD')
+                      ? '#fff'
+                      : '#000'
+                  }
                 >
                   {e.date?.day}
                 </Typography>
@@ -437,7 +466,11 @@ function Calendar() {
           <Typography variant="Title1">
             {date.format('YYYY년 M월 D일')}
           </Typography>
-          <SeeMore routeFn={() => {}} />
+          <SeeMore
+            routeFn={() => {
+              navigation.navigate('MonthlyMovies');
+            }}
+          />
         </Group>
         <Stack
           style={{
@@ -446,22 +479,28 @@ function Calendar() {
             marginTop: 20,
           }}
         >
-          {movies[date.format('YYYY-MM-DD')] !== undefined ? (
-            movies[date.format('YYYY-MM-DD')]?.map((item) => (
+          {MonthlyMovieData[date.format('YYYY-MM-DD')] !== undefined ? (
+            MonthlyMovieData[date.format('YYYY-MM-DD')]?.map((item) => (
               <Pressable
                 style={styles.selectedDate.box}
+                onPress={() => {
+                  navigation.navigate('Detail');
+                }}
                 key={`${item.id}-${item.title}-${item.watch_date}`}
               >
                 <MoviePoster
                   width={63}
                   height={83}
                   radius={5}
-                  img={{uri: item.poster_path}}
+                  img={{
+                    uri:
+                      'https://image.tmdb.org/t/p/original' + item.poster_path,
+                  }}
                 />
                 <Stack>
                   <Typography variant="Title2">{item.title}</Typography>
                   <Typography variant="Info" color="#a4a4a4">
-                    {item.release_date}
+                    {item.release_date.slice(0, 4)}
                   </Typography>
                   <Group align="center" gap={2}>
                     <IconStar width={13} />
@@ -473,7 +512,12 @@ function Calendar() {
               </Pressable>
             ))
           ) : (
-            <Pressable style={styles.selectedDate.box}>
+            <Pressable
+              style={styles.selectedDate.box}
+              onPress={() => {
+                navigation.navigate('Search');
+              }}
+            >
               <View style={styles.selectedDate.emptyImg}>
                 <IconPlus fill="#6f00f8" />
               </View>

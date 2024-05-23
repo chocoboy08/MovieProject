@@ -1,16 +1,20 @@
 /* eslint-disable react-native/no-inline-styles */
-import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React, {useState} from 'react';
 import {Image, Pressable, ScrollView, TextInput} from 'react-native';
 import IconSearch from '../assets/icon_search.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
+import {HomeStackParamList} from '../navigators/HomeNav';
 import {mockData} from '../utils/mockData';
 
-function Search() {
-  const navigation = useNavigation();
+type SearchScreenProps = {
+  navigation: NativeStackNavigationProp<HomeStackParamList, 'Search'>;
+};
+function Search({navigation}: SearchScreenProps) {
   const [textInput, setTextInput] = useState('');
+  const [searchItem, setSearchItem] = useState('');
   return (
     <ScrollView
       contentContainerStyle={{
@@ -33,7 +37,7 @@ function Search() {
         >
           <IconSearch />
           <TextInput
-            style={{width: 250}}
+            style={{width: 250, padding: 0}}
             value={textInput}
             onChangeText={(text) => {
               setTextInput(text);
@@ -58,8 +62,31 @@ function Search() {
           borderTopColor: '#CBCBCB',
         }}
       >
-        {mockData.results.map((item, idx) => {
-          return textInput ? (
+        {mockData[1].results.map((item, idx) => {
+          return searchItem.length === 0 ? (
+            idx === 0 && textInput && (
+              <Pressable
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 11,
+                  height: 45,
+                  paddingLeft: 29,
+                  borderBottomWidth: 0.5,
+                  borderColor: '#CBCBCB',
+                }}
+                onPress={() => {
+                  setSearchItem(item.title);
+                }}
+                key={`autocomplete-${item.title}-${idx}`}
+              >
+                <IconSearch />
+                <Typography variant="Body2" style={{color: '#454545'}}>
+                  {item.title}
+                </Typography>
+              </Pressable>
+            )
+          ) : item.title !== searchItem ? undefined : (
             <Pressable
               style={{
                 flexDirection: 'row',
@@ -69,10 +96,13 @@ function Search() {
                 borderBottomWidth: 0.5,
                 borderColor: '#e3e3e3',
               }}
+              onPress={() => {
+                navigation.navigate('Detail');
+              }}
               key={`search-list-movie-${item.id}`}
             >
               <Image
-                src={item.poster_path}
+                src={'https://image.tmdb.org/t/p/original' + item.poster_path}
                 style={{width: 65, height: 89, borderRadius: 5}}
               />
               <Stack
@@ -86,26 +116,8 @@ function Search() {
                 <Typography variant="Title2" color="#000">
                   {item.title}
                 </Typography>
-                <Typography variant="Body2">2020.제임스</Typography>
+                <Typography variant="Body2">{item.release_date}</Typography>
               </Stack>
-            </Pressable>
-          ) : (
-            <Pressable
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 11,
-                height: 45,
-                paddingLeft: 29,
-                borderBottomWidth: 0.5,
-                borderColor: '#CBCBCB',
-              }}
-              key={`autocomplete-${item.title}-${idx}`}
-            >
-              <IconSearch />
-              <Typography variant="Body2" style={{color: '#454545'}}>
-                {item.title}
-              </Typography>
             </Pressable>
           );
         })}

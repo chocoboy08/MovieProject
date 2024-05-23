@@ -38,8 +38,7 @@ const styles = {
     },
   },
   pageBottom: {
-    wrapper: {backgroundColor: '#fff'},
-
+    wrapper: css({backgroundColor: '#fff', flex: 1}),
     movies: {
       border: {
         selected: css({
@@ -59,11 +58,11 @@ type AddMoviesScreenProps = NativeStackScreenProps<
   StorageStackParamList,
   'AddMovies'
 >;
-function AddRecord({navigation}: AddMoviesScreenProps) {
+function AddMovies({navigation}: AddMoviesScreenProps) {
   const [addList, setAddList] = useState<number[]>([]);
   return (
     <Stack style={{flex: 1}}>
-      <ScrollView style={{gap: 14}}>
+      <ScrollView style={{gap: 14}} contentContainerStyle={{flexGrow: 1}}>
         <Stack style={styles.pageTop.wrapper} align="center" justify="flex-end">
           <Stack>
             <Typography variant="Head1" color="#2d3540">
@@ -87,13 +86,16 @@ function AddRecord({navigation}: AddMoviesScreenProps) {
             </Group>
           </Stack>
         </Stack>
-        <Stack style={[styles.pageBottom.wrapper, {width: '100%'}]}>
+        <Stack
+          style={[styles.pageBottom.wrapper, {width: '100%'}]}
+          justify="flex-start"
+        >
           <Stack spacing={10} style={{marginTop: 13}} align="center">
             <Group style={{width: 300}}>
               <Typography variant="Title1">내가 본 영화들</Typography>
             </Group>
             <Stack style={{width: '100%'}}>
-              {mockData.results.map((item) => {
+              {mockData[0].results.slice(0, 4).map((item) => {
                 return (
                   <Pressable
                     onPress={() => {
@@ -117,7 +119,10 @@ function AddRecord({navigation}: AddMoviesScreenProps) {
                       style={{marginTop: 10, marginBottom: 10, width: 300}}
                     >
                       <Image
-                        src={item.poster_path}
+                        src={
+                          'https://image.tmdb.org/t/p/original' +
+                          item.poster_path
+                        }
                         style={{width: 65, height: 89, borderRadius: 5}}
                         key={`recent-list-${item.title}`}
                       />
@@ -147,7 +152,11 @@ function AddRecord({navigation}: AddMoviesScreenProps) {
           containerStyle={{position: 'absolute', right: 15, bottom: 30}}
           offset={[0, 2]}
         >
-          <Pressable>
+          <Pressable
+            onPress={() => {
+              navigation.goBack();
+            }}
+          >
             <Group position="center" align="center">
               <IconAddList fill="#fff" width={15} />
               <Typography variant="Info" color="#fff">
@@ -161,4 +170,4 @@ function AddRecord({navigation}: AddMoviesScreenProps) {
   );
 }
 
-export default AddRecord;
+export default AddMovies;

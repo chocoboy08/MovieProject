@@ -29,6 +29,7 @@ const SORTINGMENU = ['최신순', '오래된 순', '관람객 순', '별점 순'
 const styles = {
   wrapper: css({
     width: '100%',
+    flex: 1,
     paddingTop: 50,
     backgroundColor: '#fff',
     paddingBottom: 40,
@@ -96,13 +97,18 @@ type StorageDetailScreenProps = NativeStackScreenProps<
 
 function StorageDetail({navigation, route}: StorageDetailScreenProps) {
   const params = route.params;
-  const STORAGEMENU = ['나중에 볼 영화', '모든 영화', '액션', '2023 겨울 플리'];
+  const STORAGEMENU = [
+    '나중에 볼 영화',
+    '내가 본 영화들',
+    '2024 가장 재밌게 본',
+    '겨울에 보고싶은 영화',
+  ];
   const [selectedSorting, setSelectedSorting] = useState('별점 순');
-  const [selectedStorage, setSelectedStorage] = useState('모든 영화');
+  const [selectedStorage, setSelectedStorage] = useState(STORAGEMENU[2]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-
+  const [isAdd, setIsAdd] = useState(false);
   const panY = useRef(
     new Animated.Value(Dimensions.get('screen').height),
   ).current;
@@ -233,6 +239,7 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
               justifyContent: 'center',
             }}
             onPress={() => {
+              setIsAdd(true);
               navigation.navigate('AddMovies');
             }}
           >
@@ -289,11 +296,11 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
           </View>
         </Group>
         <Group style={{flexWrap: 'wrap'}} gap={10} position="left">
-          {mockData.results.map((item) => (
+          {isAdd && (
             <Stack
               style={{width: 103, marginBottom: 20}}
               justify="space-between"
-              key={`playlist-${item.title}-${item.id}`}
+              key={`playlist-duen`}
             >
               <View>
                 <MoviePoster
@@ -301,21 +308,46 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
                   height={142}
                   radius={5}
                   img={{
-                    uri: item.poster_path,
+                    uri:
+                      'https://image.tmdb.org/t/p/original' +
+                      mockData[1].results[0].poster_path,
                   }}
                 />
                 <Typography variant="Info" numberOfLines={1}>
-                  {item.title}
+                  {mockData[1].results[0].title}
                 </Typography>
               </View>
               <Group align="center" gap={2}>
                 <IconFullStar width={13} height={13} />
                 <Typography variant="Info" color="#6F00F8">
-                  {item.vote_average}
+                  4.5
                 </Typography>
               </Group>
             </Stack>
-          ))}
+          )}
+          <Stack
+            style={{width: 103, marginBottom: 20}}
+            justify="space-between"
+            key={`playlist-avatar`}
+          >
+            <View>
+              <MoviePoster
+                width={103}
+                height={142}
+                radius={5}
+                img={require('../assets/posters/avatar.jpeg')}
+              />
+              <Typography variant="Info" numberOfLines={1}>
+                아바타: 물의 길
+              </Typography>
+            </View>
+            <Group align="center" gap={2}>
+              <IconFullStar width={13} height={13} />
+              <Typography variant="Info" color="#6F00F8">
+                4.0
+              </Typography>
+            </Group>
+          </Stack>
         </Group>
       </ScrollView>
     </Stack>
