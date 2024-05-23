@@ -1,9 +1,10 @@
 import {css} from '@emotion/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React from 'react';
-import {Image, Pressable, useWindowDimensions} from 'react-native';
+import {Pressable, useWindowDimensions} from 'react-native';
 
 import IconKakao from '../assets/icon_kakao.svg';
+import LogoWhite from '../assets/mookive_logo_white.svg';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import {HomeStackParamList} from '../navigators/HomeNav';
@@ -27,10 +28,12 @@ function Login({navigation}: LoginScreenProps) {
   const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();
   return (
     <Stack style={styles.background} align="center" spacing={30}>
-      <Typography variant="Title2" color="#fff">
-        내 영화 기록들을 한눈에
-      </Typography>
-      <Image source={require('../assets/mookive_logo.png')} />
+      <Stack align="center" spacing={-10}>
+        <Typography variant="Title2" color="#fff">
+          내 영화 기록들을 한눈에
+        </Typography>
+        <LogoWhite width={deviceWidth * 0.74} height={deviceHeight * 0.08} />
+      </Stack>
       <Pressable
         style={[styles.kakao, {width: deviceWidth * 0.83, paddingVertical: 10}]}
         onPress={() => {
