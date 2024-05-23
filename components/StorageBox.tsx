@@ -6,11 +6,13 @@ import {
   Pressable,
   View,
 } from 'react-native';
-
+import IconLogo from '../assets/icon_empty_logo.svg';
+import Stack from './@base/Stack';
 export interface StorageBoxProps {
   width: number;
   height: number;
-  img: ImageSourcePropType;
+  isEmpty?: boolean;
+  img?: ImageSourcePropType;
   children: ReactNode;
   onPress: () => void;
 }
@@ -29,24 +31,59 @@ const styles = {
   }),
 };
 
-function StorageBox({width, height, img, children, onPress}: StorageBoxProps) {
+function StorageBox({
+  width: boxWidth,
+  height: boxHeight,
+  isEmpty,
+  img,
+  children,
+  onPress,
+}: StorageBoxProps) {
   return (
     <Pressable onPress={onPress}>
-      <ImageBackground
-        source={img}
-        style={[
-          styles.backgroundImg,
-          {
-            width: width,
-            height: height,
-            paddingLeft: width * 0.08,
-          },
-        ]}
-        imageStyle={{borderRadius: 10}}
-      >
-        <View style={[styles.backgroundBlur, {width: width, height: height}]} />
-        {children}
-      </ImageBackground>
+      {isEmpty ? (
+        <Stack
+          justify="flex-end"
+          spacing={7}
+          style={{
+            width: boxWidth,
+            height: boxHeight,
+            paddingBottom: 10,
+            borderRadius: 10,
+            borderColor: '#e6e6e6',
+            borderWidth: 1,
+          }}
+        >
+          <IconLogo
+            width={boxWidth * 0.57}
+            height={boxHeight * 0.46}
+            fill="#e6e6e6"
+            style={{alignSelf: 'center'}}
+          />
+          <View style={{paddingLeft: boxWidth * 0.08}}>{children}</View>
+        </Stack>
+      ) : (
+        <ImageBackground
+          source={img}
+          style={[
+            styles.backgroundImg,
+            {
+              width: boxWidth,
+              height: boxHeight,
+              paddingLeft: boxWidth * 0.08,
+            },
+          ]}
+          imageStyle={{borderRadius: 10}}
+        >
+          <View
+            style={[
+              styles.backgroundBlur,
+              {width: boxWidth, height: boxHeight},
+            ]}
+          />
+          {children}
+        </ImageBackground>
+      )}
     </Pressable>
   );
 }

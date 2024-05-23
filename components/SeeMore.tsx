@@ -11,9 +11,7 @@ function SeeMore({routeFn}: SeeMoreProps) {
   return (
     <Pressable
       style={{flexDirection: 'row', alignItems: 'center', gap: 4.5}}
-      onPress={() => {
-        routeFn();
-      }}
+      onPress={routeFn}
     >
       <Typography variant="Info" color="#6f00f8">
         더보기

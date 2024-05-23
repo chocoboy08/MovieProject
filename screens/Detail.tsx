@@ -31,6 +31,7 @@ import MoviePoster from '../components/MoviePoster';
 import SeeMore from '../components/SeeMore';
 import StarRating from '../components/StartRating';
 import {HomeStackParamList} from '../navigators/HomeNav';
+import {mockData} from '../utils/mockData';
 import {mockPlaylist} from './PlayLists';
 
 const styles = {
@@ -198,7 +199,7 @@ function Detail({navigation}: DetailScreenProps) {
 
   const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
   const [addList, setAddList] = useState<number[]>([]);
-
+  const mockMovie = mockData[1].results[0];
   const handleWatchedClick = () => {
     //봤어요 클릭
     if (watched) {
@@ -270,6 +271,18 @@ function Detail({navigation}: DetailScreenProps) {
       selectedKeywords: keywords.filter((item) => item.selected),
     });
   }, [keywords]);
+  useEffect(() => {
+    if (
+      Object.entries(reviewData).toString() !==
+      Object.entries({
+        rating: 0,
+        date: undefined,
+        selectedKeywords: [],
+        review: '',
+      }).toString()
+    )
+      setWatched(true);
+  }, [reviewData]);
   return (
     <ScrollView style={{backgroundColor: '#fff'}}>
       <Modal
@@ -335,7 +348,7 @@ function Detail({navigation}: DetailScreenProps) {
                         </View>
                       ) : (
                         <View style={styles.playlistModal.item.img.none}>
-                          <IconLogo />
+                          <IconLogo fill="#e6e6e6" />
                         </View>
                       )}
                       <Stack justify="space-between">
@@ -345,7 +358,7 @@ function Detail({navigation}: DetailScreenProps) {
                               {item.title}
                             </Typography>
                           </Group>
-                          <Typography variant="Info">{`1개 작품`}</Typography>
+                          <Typography variant="Info">{`${item.number}개 작품`}</Typography>
                         </Stack>
                         <SeeMore routeFn={() => {}} />
                       </Stack>
@@ -436,7 +449,9 @@ function Detail({navigation}: DetailScreenProps) {
       </Modal>
       <ImageBackground
         style={styles.banner.background}
-        source={require('../assets/posters/avatar.jpeg')}
+        source={{
+          uri: 'https://image.tmdb.org/t/p/original' + mockMovie.poster_path,
+        }}
       >
         <LinearGradient
           colors={['rgba(0,0,0,0.5)', 'rgb(255,255,255)']}
@@ -446,10 +461,10 @@ function Detail({navigation}: DetailScreenProps) {
         />
         <Stack style={{marginTop: 140, marginBottom: 35}} align="center">
           <Typography variant="Head1" color="#fff">
-            아바타: 물의 길
+            {mockMovie.title}
           </Typography>
           <Typography variant="Info" color="#a4a4a4">
-            미국 . 2022. 제임스 카메론
+            {mockMovie.release_date}
           </Typography>
         </Stack>
         <Typography
@@ -463,9 +478,7 @@ function Detail({navigation}: DetailScreenProps) {
             },
           ]}
         >
-          판도라 행성에서 ‘제이크 설리'와 ‘네이티리'가 이룬 가족이 겪게 되는
-          무자비한 위협과 살아남기 위해 떠나야 하는 긴 여정과 전투, 그리고
-          견뎌내야 할 상처에 대한 이야기.
+          {mockMovie.overview}
         </Typography>
         <Pressable
           style={{marginBottom: 50, flexDirection: 'row', alignItems: 'center'}}
@@ -656,18 +669,32 @@ function Detail({navigation}: DetailScreenProps) {
         </Stack>
         <View style={styles.bottom.divider} />
         <Stack align="flex-start" spacing={13}>
-          <Group align="flex-end" gap={5}>
+          <Group
+            align="flex-end"
+            gap={5}
+            position={review.length !== 0 ? 'apart' : 'left'}
+            style={{width: '100%'}}
+          >
             <Typography variant="Title1" color="#2d3540">
               내 후기
             </Typography>
-            <Typography variant={'Info'} color={'#c3c3c3'}>
-              후기를 추가해보세요!
-            </Typography>
+            {review.length !== 0 ? (
+              <Pressable style={styles.bottom.editBtn} onPress={() => {}}>
+                <Typography variant="Info" color="#a8a8a8">
+                  수정
+                </Typography>
+              </Pressable>
+            ) : (
+              <Typography variant={'Info'} color={'#c3c3c3'}>
+                후기를 추가해보세요!
+              </Typography>
+            )}
           </Group>
           {review === '' ? (
             <Pressable
               style={styles.bottom.addBtn}
               onPress={() => {
+                setReviewData({...reviewData, review: '재밌었다.'});
                 navigation.navigate('Writting');
               }}
             >
