@@ -4,16 +4,16 @@ import IconCalendar from '../assets/icon_calendar.svg';
 import IconFolder from '../assets/icon_folder.svg';
 import IconHome from '../assets/icon_home.svg';
 import IconProfile from '../assets/icon_profile.svg';
-import Home from '../screens/Home';
 import CalendarNav from './CalendarNav';
 import HomeNav from './HomeNav';
+import MyPageNav from './MyPageNav';
 import StorageNav from './StorageNav';
 
 export type TabParamList = {
   HomeNav: undefined;
   StorageNav: undefined;
   CalendarNav: undefined;
-  ProfileNav: undefined;
+  MyPageNav: undefined;
 };
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -53,8 +53,8 @@ function Main() {
         }}
       />
       <Tab.Screen
-        name="CalendarNav"
         component={CalendarNav}
+        name="CalendarNav"
         options={{
           tabBarIcon: ({color}) => {
             return <IconCalendar fill={color} />;
@@ -63,8 +63,8 @@ function Main() {
         }}
       />
       <Tab.Screen
-        name="ProfileNav"
-        component={Home}
+        name="MyPageNav"
+        component={MyPageNav}
         options={{
           tabBarIcon: ({color}) => {
             return <IconProfile fill={color} />;
