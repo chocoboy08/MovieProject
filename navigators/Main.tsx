@@ -1,78 +1,43 @@
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
-import IconCalendar from '../assets/icon_calendar.svg';
-import IconFolder from '../assets/icon_folder.svg';
-import IconHome from '../assets/icon_home.svg';
-import IconProfile from '../assets/icon_profile.svg';
-import CalendarNav from './CalendarNav';
-import HomeNav from './HomeNav';
-import MyPageNav from './MyPageNav';
-import StorageNav from './StorageNav';
+import AddMovies from '../screens/AddMovies';
+import Detail from '../screens/Detail';
+import Login from '../screens/Login';
+import MonthlyMovies from '../screens/MonthlyMovies';
+import PlayLists from '../screens/PlayLists';
+import Profile from '../screens/Profile';
+import Search from '../screens/Search';
+import StorageDetail from '../screens/StorageDetail';
+import Writting from '../screens/Writting';
+import TabNav from './TabNav';
 
-export type TabParamList = {
-  HomeNav: undefined;
-  StorageNav: undefined;
-  CalendarNav: undefined;
-  MyPageNav: undefined;
+export type MainStackParamList = {
+  TabNav: undefined;
+  Login: undefined;
+  Search: undefined;
+  Detail: {id: number};
+  Writting: undefined;
+  MonthlyMovies: {year: number; month: number};
+  StorageDetail: undefined | {id: number};
+  PlayLists: undefined;
+  AddMovies: undefined;
+  Profile: undefined;
 };
-const Tab = createBottomTabNavigator<TabParamList>();
-
+const MainStack = createNativeStackNavigator<MainStackParamList>();
 function Main() {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#6F00F8',
-        tabBarInactiveTintColor: '#C3C3C3',
-        tabBarStyle: {height: 67},
-        tabBarItemStyle: {paddingTop: 10},
-        tabBarLabelStyle: {paddingBottom: 14},
-        tabBarHideOnKeyboard: true,
-        unmountOnBlur: true,
-      }}
-    >
-      <Tab.Screen
-        name="HomeNav"
-        component={HomeNav}
-        options={{
-          tabBarIcon: ({color}) => {
-            return <IconHome fill={color} />;
-          },
-          title: '홈',
-        }}
-      />
-
-      <Tab.Screen
-        name="StorageNav"
-        component={StorageNav}
-        options={{
-          tabBarIcon: ({color}) => {
-            return <IconFolder fill={color} />;
-          },
-          title: '보관함',
-        }}
-      />
-      <Tab.Screen
-        component={CalendarNav}
-        name="CalendarNav"
-        options={{
-          tabBarIcon: ({color}) => {
-            return <IconCalendar fill={color} />;
-          },
-          title: '캘린더',
-        }}
-      />
-      <Tab.Screen
-        name="MyPageNav"
-        component={MyPageNav}
-        options={{
-          tabBarIcon: ({color}) => {
-            return <IconProfile fill={color} />;
-          },
-          title: 'MY',
-        }}
-      />
-    </Tab.Navigator>
+    <MainStack.Navigator screenOptions={{headerShown: false}}>
+      <MainStack.Screen name="TabNav" component={TabNav} />
+      <MainStack.Screen name="Login" component={Login} />
+      <MainStack.Screen name="Search" component={Search} />
+      <MainStack.Screen name="Detail" component={Detail} />
+      <MainStack.Screen name="Writting" component={Writting} />
+      <MainStack.Screen name="MonthlyMovies" component={MonthlyMovies} />
+      <MainStack.Screen name="StorageDetail" component={StorageDetail} />
+      <MainStack.Screen name="PlayLists" component={PlayLists} />
+      <MainStack.Screen name="AddMovies" component={AddMovies} />
+      <MainStack.Screen name="Profile" component={Profile} />
+    </MainStack.Navigator>
   );
 }
 
