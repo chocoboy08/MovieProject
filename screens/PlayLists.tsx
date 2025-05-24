@@ -1,8 +1,12 @@
 import {css} from '@emotion/native';
+import {useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import axios from 'axios';
 import React, {useState} from 'react';
 import {Modal, Pressable, ScrollView, TextInput, View} from 'react-native';
 import {Shadow} from 'react-native-shadow-2';
+import {instance} from '../apis/instance';
 import IconDelete from '../assets/icon_delete.svg';
 import IconEdit from '../assets/icon_edit.svg';
 import IconLogo from '../assets/icon_empty_logo.svg';
@@ -13,13 +17,9 @@ import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
 import SeeMore from '../components/SeeMore';
-import {StorageStackParamList} from '../navigators/StorageNav';
+import {MainStackParamList} from '../navigators/Main';
+import {PlayList} from '../utils/type';
 
-interface Playlist {
-  title: string;
-  img: string;
-  id: number;
-}
 const styles = {
   img: {
     blur: css({
@@ -80,40 +80,81 @@ const styles = {
     }),
   },
 };
-export const mockPlaylist = [
-  {
-    title: '2024 가장 재밌게 본',
-    img: require('../assets/posters/avatar.jpeg'),
-    id: 0,
-    number: 1,
-  },
 
-  {title: '겨울에 보고싶은 영화', img: '', id: 1, number: 0},
-];
 type PlayListsScreenProps = {
-  navigation: NativeStackNavigationProp<StorageStackParamList, 'PlayLists'>;
+  navigation: NativeStackNavigationProp<MainStackParamList, 'PlayLists'>;
 };
 function PlayLists({navigation}: PlayListsScreenProps) {
+  const queryClient = useQueryClient();
   const [editPlayList, setEditPlayList] = useState(false);
-  const [deleteIdx, setDeleteIdx] = useState<number | null>(null);
+  const [changeIdx, setChangeIdx] = useState<number>(-1);
   const [createState, setCreateState] = useState('');
   const [inputText, setInputText] = useState('');
-  const deletePlaylist = () => {
-    setDeleteIdx(null);
-  };
+
+  //플리 가져오기
+  const playlistQuery = useQuery<PlayList[]>({
+    queryKey: ['playlists', 3],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/playlist/${3}`);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+
+  //플리 추가하기
+  const playlistMutation = useMutation({
+    mutationFn: async (action: string) => {
+      try {
+        switch (action) {
+          case 'post': {
+            const response = await instance.post('/playlist', {
+              name: inputText,
+              userId: 3,
+            });
+            break;
+          }
+          case 'put': {
+            const response = await instance.put('/playlist/update', {
+              name: inputText,
+              playlistId: changeIdx,
+            });
+            break;
+          }
+          case 'delete': {
+            const response = await instance.delete(
+              `/playlist/delete/${changeIdx}`,
+            );
+          }
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          throw error;
+        } else throw new Error('different error than axios');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['playlists']});
+    },
+  });
+  useFocusEffect(() => {
+    playlistQuery.refetch();
+  });
   return (
     <ScrollView
       contentContainerStyle={{
         alignItems: 'center',
         justifyContent: 'flex-start',
-        flex: 1,
+        flexGrow: 1,
       }}
       style={{
         backgroundColor: '#ffffff',
       }}
     >
       <Modal
-        visible={createState.length !== 0}
+        visible={!(createState === '' || createState === 'delete')}
         transparent
         statusBarTranslucent
       >
@@ -140,6 +181,7 @@ function PlayLists({navigation}: PlayListsScreenProps) {
               <Pressable
                 style={[styles.delete.btn, {backgroundColor: '#d9d9d9'}]}
                 onPress={() => {
+                  setInputText('');
                   setCreateState('');
                 }}
               >
@@ -150,6 +192,9 @@ function PlayLists({navigation}: PlayListsScreenProps) {
               <Pressable
                 style={[styles.delete.btn, {backgroundColor: '#6f00f8'}]}
                 onPress={() => {
+                  if (createState === 'create') playlistMutation.mutate('post');
+                  else playlistMutation.mutate('put');
+                  setInputText('');
                   setCreateState('');
                 }}
               >
@@ -161,7 +206,11 @@ function PlayLists({navigation}: PlayListsScreenProps) {
           </Stack>
         </Stack>
       </Modal>
-      <Modal visible={deleteIdx !== null} transparent statusBarTranslucent>
+      <Modal
+        visible={createState === 'delete'}
+        transparent
+        statusBarTranslucent
+      >
         <Stack align="center" justify="center" style={styles.delete.wrapper}>
           <Stack style={styles.delete.box}>
             <Group align="center">
@@ -177,7 +226,8 @@ function PlayLists({navigation}: PlayListsScreenProps) {
               <Pressable
                 style={[styles.delete.btn, {backgroundColor: '#d9d9d9'}]}
                 onPress={() => {
-                  setDeleteIdx(null);
+                  setCreateState('');
+                  setChangeIdx(-1);
                 }}
               >
                 <Typography variant="Body2" color="#fff">
@@ -187,7 +237,8 @@ function PlayLists({navigation}: PlayListsScreenProps) {
               <Pressable
                 style={[styles.delete.btn, {backgroundColor: '#6f00f8'}]}
                 onPress={() => {
-                  deletePlaylist();
+                  playlistMutation.mutate('delete');
+                  setCreateState('');
                 }}
               >
                 <Typography variant="Body2" color="#fff">
@@ -202,25 +253,24 @@ function PlayLists({navigation}: PlayListsScreenProps) {
         <Typography variant="Title1" style={{marginTop: 50}}>
           모든 플레이리스트
         </Typography>
-        {
-          <Pressable
-            style={{position: 'absolute', right: -96}}
-            onPress={() => {
-              setEditPlayList((prev) => !prev);
-            }}
-          >
-            <Typography variant="Info">
-              {editPlayList ? '완료' : '편집'}
-            </Typography>
-          </Pressable>
-        }
+
+        <Pressable
+          style={{position: 'absolute', right: -96}}
+          onPress={() => {
+            setEditPlayList((prev) => !prev);
+          }}
+        >
+          <Typography variant="Info">
+            {editPlayList ? '완료' : '편집'}
+          </Typography>
+        </Pressable>
       </Group>
       <Stack
         align="flex-start"
         spacing={25}
         style={{width: '100%', padding: 15}}
       >
-        {mockPlaylist.map((item) => (
+        {playlistQuery.data?.map((item, idx) => (
           <Pressable
             style={{
               width: '100%',
@@ -228,19 +278,23 @@ function PlayLists({navigation}: PlayListsScreenProps) {
               justifyContent: 'space-between',
               alignItems: 'center',
             }}
-            key={`playlist-${item.id}-${item.title}`}
+            key={`playlist-${item.playlistId}-${item.name}`}
             onPress={() => {
-              navigation.navigate('StorageDetail', {id: item.id});
+              !editPlayList &&
+                navigation.navigate('StorageDetail', {
+                  id: item.playlistId,
+                  editable: true,
+                });
             }}
           >
             <Group gap={10}>
-              {item.img ? (
+              {item.poster ? (
                 <View>
                   <View style={styles.img.blur} />
                   <MoviePoster
                     width={101}
                     height={101}
-                    img={item.img}
+                    img={{uri: item.poster}}
                     radius={10}
                   />
                 </View>
@@ -262,26 +316,30 @@ function PlayLists({navigation}: PlayListsScreenProps) {
               <Stack justify="space-between">
                 <Stack>
                   <Group align="center" gap={5}>
-                    <Typography variant="Title1">{item.title}</Typography>
-                    {editPlayList && (
+                    <Typography variant="Title1">{item.name}</Typography>
+                    {editPlayList && idx > 1 && (
                       <Pressable
                         onPress={() => {
-                          setCreateState(item.title);
+                          setCreateState(item.name);
+                          item.playlistId && setChangeIdx(item.playlistId);
                         }}
                       >
                         <IconEdit width={11} fill="#000" />
                       </Pressable>
                     )}
                   </Group>
-                  <Typography variant="Info">{`${item.number}개 작품`}</Typography>
+                  {item.title && (
+                    <Typography variant="Info">{`${item.title} 외 ${item.total}개 작품`}</Typography>
+                  )}
                 </Stack>
                 <SeeMore routeFn={() => {}} />
               </Stack>
             </Group>
-            {editPlayList && (
+            {editPlayList && idx > 1 && (
               <Pressable
                 onPress={() => {
-                  setDeleteIdx(item.id);
+                  item.playlistId && setChangeIdx(item.playlistId);
+                  setCreateState('delete');
                 }}
               >
                 <IconDelete style={{alignSelf: 'center'}} />
@@ -290,31 +348,33 @@ function PlayLists({navigation}: PlayListsScreenProps) {
           </Pressable>
         ))}
       </Stack>
-      <Shadow
-        startColor="rgba(0,0,0,0.1)"
-        offset={[0, 2]}
-        containerStyle={{position: 'absolute', bottom: 32, right: 16}}
-      >
-        <Pressable
-          style={{
-            paddingHorizontal: 16,
-            height: 31,
-            borderRadius: 15.5,
-            backgroundColor: '#6f00f8',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 3,
-          }}
-          onPress={() => {
-            setCreateState('create');
-          }}
+      {!editPlayList && (
+        <Shadow
+          startColor="rgba(0,0,0,0.1)"
+          offset={[0, 2]}
+          containerStyle={{position: 'absolute', bottom: 32, right: 16}}
         >
-          <Typography variant="Body2" color="#fff">
-            새로 만들기
-          </Typography>
-          <IconPlus fill="#fff" />
-        </Pressable>
-      </Shadow>
+          <Pressable
+            style={{
+              paddingHorizontal: 16,
+              height: 31,
+              borderRadius: 15.5,
+              backgroundColor: '#6f00f8',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+            }}
+            onPress={() => {
+              setCreateState('create');
+            }}
+          >
+            <Typography variant="Body2" color="#fff">
+              새로 만들기
+            </Typography>
+            <IconPlus fill="#fff" />
+          </Pressable>
+        </Shadow>
+      )}
     </ScrollView>
   );
 }

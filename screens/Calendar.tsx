@@ -1,5 +1,8 @@
 import {css} from '@emotion/native';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {CompositeNavigationProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useQuery} from '@tanstack/react-query';
 import moment from 'moment';
 import React, {useEffect, useRef, useState} from 'react';
 import {
@@ -9,10 +12,12 @@ import {
   Modal,
   PanResponder,
   Pressable,
+  ScrollView,
   View,
 } from 'react-native';
 import {LocaleConfig, Calendar as MovieCalendar} from 'react-native-calendars';
 import DatePicker from 'react-native-date-picker';
+import {instance} from '../apis/instance';
 import IconArrowDown from '../assets/icon_arrow_down.svg';
 import IconStar from '../assets/icon_fullstar.svg';
 import IconPlus from '../assets/icon_plus.svg';
@@ -21,15 +26,18 @@ import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
 import SeeMore from '../components/SeeMore';
-import {CalendarStackParamList} from '../navigators/CalendarNav';
+import {MainStackParamList} from '../navigators/Main';
+import {TabParamList} from '../navigators/TabNav';
+import {Movie} from '../utils/type';
 
 const styles = {
   wrapper: css({
     backgroundColor: '#fff',
     width: '100%',
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'flex-start',
-    paddingTop: 50,
+    paddingTop: 25,
+    paddingBottom: 20,
   }),
   calendar: {
     wrapper: css({
@@ -150,138 +158,33 @@ LocaleConfig.locales['ko'] = {
 };
 LocaleConfig.defaultLocale = 'ko';
 
-interface Movie {
-  id: number;
-  original_language: string;
-  original_title: string;
-  overview: string;
-  poster_path: string;
-  release_date: string;
-  watch_date: string;
-  title: string;
-  rating: number;
-}
-
-interface CalendarMovie {
-  [date: string]: Movie[] | undefined;
-}
-
-export const MonthlyMovieData: CalendarMovie = {
-  '2024-04-01': [
-    {
-      id: 634492,
-      original_language: 'en',
-      original_title: 'Madame Web',
-      overview:
-        "우연한 사고로 미래를 볼 수 있게 된 구급대원 '캐시 웹'이 거미줄처럼 엮인 운명을 마주하며, 같은 예지 능력을 가진 적 '심스'에 맞서 세상을 구할 히어로 '마담 웹'으로 거듭나게 되는 과정을 그린 마블의 NEW 히어로 드라마",
-      watch_date: '',
-      poster_path: '/eqEzpQNusV9XSdnA9HAvlLMeuPs.jpg',
-      release_date: '2024-02-14',
-      title: '마담 웹',
-      rating: 3.5,
-    },
-  ],
-  '2024-04-02': undefined,
-  '2024-04-03': undefined,
-  '2024-04-04': undefined,
-  '2024-04-05': undefined,
-  '2024-04-06': [
-    {
-      id: 19,
-      original_language: 'ko',
-      original_title: '콘크리트 유토피아',
-      overview:
-        '대지진으로 하루아침에 폐허가 된 서울. 모든 것이 무너졌지만 단 한 곳, 황궁 아파트만은 그대로다. 소문을 들은 외부 생존자들이 황궁 아파트로 몰려들자 위협을 느끼기 시작하는 입주민들. 생존을 위해 하나가 된 그들은 새로운 주민 대표 영탁을 중심으로 외부인의 출입을 철저히 막아선 채 아파트 주민만을 위한 새로운 규칙을 만든다. 덕분에 지옥 같은 바깥 세상과 달리 주민들에겐 더 없이 안전하고 평화로운 유토피아 황궁 아파트. 하지만 끝이 없는 생존의 위기 속 그들 사이에서도 예상치 못한 갈등이 시작되는데...',
-      poster_path: '/9dENCKupUckoT1WgOohHMZfVl61.jpg',
-      release_date: '2023-08-04',
-      watch_date: '',
-      title: '콘크리트 유토피아',
-      rating: 3.5,
-    },
-  ],
-  '2024-04-07': [
-    {
-      id: 1011985,
-      original_language: 'en',
-      original_title: 'Kung Fu Panda 4',
-      overview:
-        '마침내 내면의 평화… 냉면의 평화…가 찾아왔다고 믿는 용의 전사 ‘포’ 이젠 평화의 계곡의 영적 지도자가 되고, 자신을 대신할 후계자를 찾아야만 한다. “이제 용의 전사는 그만둬야 해요?” 용의 전사로의 모습이 익숙해지고 새로운 성장을 하기보다 지금 이대로가 좋은 ‘포’ 하지만 모든 쿵푸 마스터들의 능력을 그대로 복제하는 강력한 빌런 ‘카멜레온’이 나타나고 그녀를 막기 위해 정체를 알 수 없는 쿵푸 고수 ‘젠’과 함께 모험을 떠나게 되는데… 포는 가장 강력한 빌런과 자기 자신마저 뛰어넘고 진정한 변화를 할 수 있을까?',
-      watch_date: '',
-      rating: 4.5,
-      poster_path: '/1ZNOOMmILNUzVYbzG1j7GYb5bEV.jpg',
-      release_date: '2024-03-02',
-      title: '쿵푸팬더 4',
-    },
-  ],
-  '2024-04-08': [
-    {
-      id: 2,
-      original_language: 'en',
-      original_title: 'Oppenheimer',
-      overview:
-        '세상을 구하기 위해 세상을 파괴할 지도 모르는 선택을 해야 하는 천재 과학자의 핵개발 프로젝트.',
-      poster_path: '/4ZLnVUfiCe3wX8Ut9eyujndpyvA.jpg',
-      release_date: '2023-08-15',
-      title: '오펜하이머',
-      watch_date: '',
-      rating: 4.5,
-    },
-    {
-      id: 748783,
-      original_language: 'en',
-      original_title: 'The Garfield Movie',
-      overview:
-        '세상귀찮 집냥이, 바쁘고 험난한 세상에 던져졌다! 집사 ‘존’과 반려견 ‘오디’를 기르며 평화로운 나날을 보내던 집냥이 ‘가필드’. 어느 날, 험악한 길냥이 무리에게 납치당해 냉혹한 거리로 던져진다. 돌봐주는 집사가 없는 집 밖 세상은 너무나도 정신없게 돌아가고 길에서 우연히 다시 만난 아빠 길냥이 ‘빅’은 오히려 ‘가필드’를 위기에 빠지게 하는데… 험난한 세상, 살아남아야 한다!',
-      watch_date: '',
-      rating: 4.5,
-      poster_path: '/57g3pHYi3p0JNVO1LkcyYbeMDBf.jpg',
-      release_date: '2024-04-30',
-      title: '가필드 더 무비',
-    },
-  ],
-  '2024-04-09': undefined,
-  '2024-04-10': undefined,
-  '2024-04-11': undefined,
-  '2024-04-12': undefined,
-  '2024-04-13': undefined,
-  '2024-04-14': undefined,
-  '2024-04-15': undefined,
-  '2024-04-16': undefined,
-  '2024-04-17': undefined,
-  '2024-04-18': [
-    {
-      id: 693134,
-      original_language: 'en',
-      original_title: 'Dune: Part Two',
-      overview:
-        '황제의 모략으로 멸문한 가문의 유일한 후계자 폴. 어머니 레이디 제시카와 간신히 목숨만 부지한 채 사막으로 도망친다. 그곳에서 만난 반란군들과 숨어 지내다 그들과 함께 황제의 모든 것을 파괴할 전투를 준비한다. 한편 반란군들의 기세가 높아질수록 불안해진 황제와 귀족 가문은 잔혹한 암살자 페이드 로타를 보내 반란군을 몰살하려 하는데…',
-      watch_date: '',
-      rating: 4.5,
-      poster_path: '/8uUU2pxm6IYZw8UgnKJyx7Dqwu9.jpg',
-      release_date: '2024-02-27',
-      title: '듄: 파트 2',
-    },
-  ],
-  '2024-04-19': undefined,
-  '2024-04-20': undefined,
-  '2024-04-21': undefined,
-  '2024-04-22': undefined,
-  '2024-04-23': undefined,
-  '2024-04-24': undefined,
-  '2024-04-25': undefined,
-  '2024-04-26': undefined,
-  '2024-04-27': undefined,
-  '2024-04-28': undefined,
-  '2024-04-29': undefined,
-  '2024-04-30': undefined,
-};
-
 type CalendarScreenProp = {
-  navigation: NativeStackNavigationProp<CalendarStackParamList, 'Calendar'>;
+  navigation: CompositeNavigationProp<
+    BottomTabNavigationProp<TabParamList, 'Calendar'>,
+    NativeStackNavigationProp<MainStackParamList>
+  >;
 };
 function Calendar({navigation}: CalendarScreenProp) {
   const [date, setDate] = useState(moment());
   const [dateModalOpen, setDateModalOpen] = useState(false);
+
+  //월별 영화 데이터 가져오기
+
+  const monthlyMoviesQuery = useQuery<Movie[][]>({
+    queryKey: ['calenderMovies', date.year(), date.month() + 1],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/record/calendar?userId=${3}&year=${date.year()}&month=${
+            date.month() + 1 < 10 ? '0' + (date.month() + 1) : date.month() + 1
+          }`,
+        );
+        return response.data;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
 
   const panY = useRef(
     new Animated.Value(Dimensions.get('screen').height),
@@ -328,8 +231,9 @@ function Calendar({navigation}: CalendarScreenProp) {
       resetPositionAnim.start();
     }
   }, [dateModalOpen]);
+
   return (
-    <Stack style={styles.wrapper}>
+    <ScrollView contentContainerStyle={styles.wrapper}>
       <Modal
         animationType="fade"
         visible={dateModalOpen}
@@ -381,7 +285,7 @@ function Calendar({navigation}: CalendarScreenProp) {
         current={date.format('YYYY-MM-DD')}
         key={date.format('YYYY-MM-DD')}
         renderHeader={() => (
-          <Pressable onPress={handleDateModal}>
+          <Pressable onPress={handleDateModal} style={{marginBottom: 10}}>
             <Group align="center" gap={12}>
               <Typography variant="Title1">
                 {date.format('YYYY년 MM월')}
@@ -405,32 +309,38 @@ function Calendar({navigation}: CalendarScreenProp) {
                 setDate(moment(e.date?.dateString));
             }}
           >
-            {MonthlyMovieData[e.date?.dateString as string] !== undefined && (
-              <ImageBackground
-                source={{
-                  uri:
-                    'https://image.tmdb.org/t/p/original' +
-                    MonthlyMovieData[e.date?.dateString!]![0].poster_path,
-                }}
-                imageStyle={{borderRadius: 5}}
-                style={styles.calendar.date.poster}
-              >
-                <View style={styles.calendar.date.blur} />
-                {MonthlyMovieData[e.date?.dateString as string]!.length > 1 && (
-                  <View style={styles.calendar.date.more}>
-                    <Typography
-                      variant="Info"
-                      color="#d8d8d8"
-                      style={{lineHeight: 12}}
-                    >
-                      +
-                      {MonthlyMovieData[e.date?.dateString as string]!.length -
-                        1}
-                    </Typography>
-                  </View>
-                )}
-              </ImageBackground>
-            )}
+            {monthlyMoviesQuery.data &&
+              monthlyMoviesQuery.data[e.date?.day as number] !== null &&
+              (e.date && e.date.month === date.month() + 1 ? (
+                <ImageBackground
+                  source={{
+                    uri: monthlyMoviesQuery.data[e.date?.day as number][0]
+                      .poster,
+                  }}
+                  imageStyle={{borderRadius: 5}}
+                  style={styles.calendar.date.poster}
+                >
+                  {e.date && e.date.month === date.month() + 1 && (
+                    <View style={styles.calendar.date.blur} />
+                  )}
+                  {e.date &&
+                    e.date.month === date.month() + 1 &&
+                    monthlyMoviesQuery.data[e.date?.day as number].length >
+                      1 && (
+                      <View style={styles.calendar.date.more}>
+                        <Typography
+                          variant="Info"
+                          color="#d8d8d8"
+                          style={{lineHeight: 12}}
+                        >
+                          +
+                          {monthlyMoviesQuery.data[e.date?.day as number]
+                            .length - 1}
+                        </Typography>
+                      </View>
+                    )}
+                </ImageBackground>
+              ) : undefined)}
             <View
               style={{
                 width: 18,
@@ -448,7 +358,8 @@ function Calendar({navigation}: CalendarScreenProp) {
                 <Typography
                   variant="Info"
                   color={
-                    MonthlyMovieData[e.date?.dateString as string] ||
+                    (monthlyMoviesQuery.data &&
+                      monthlyMoviesQuery.data[e.date?.day as number]) ||
                     e.date?.dateString === moment().format('YYYY-MM-DD')
                       ? '#fff'
                       : '#000'
@@ -468,7 +379,10 @@ function Calendar({navigation}: CalendarScreenProp) {
           </Typography>
           <SeeMore
             routeFn={() => {
-              navigation.navigate('MonthlyMovies');
+              navigation.navigate('MonthlyMovies', {
+                year: date.year(),
+                month: date.month(),
+              });
             }}
           />
         </Group>
@@ -479,28 +393,28 @@ function Calendar({navigation}: CalendarScreenProp) {
             marginTop: 20,
           }}
         >
-          {MonthlyMovieData[date.format('YYYY-MM-DD')] !== undefined ? (
-            MonthlyMovieData[date.format('YYYY-MM-DD')]?.map((item) => (
+          {monthlyMoviesQuery.data &&
+          monthlyMoviesQuery.data[date.date()] !== null ? (
+            monthlyMoviesQuery.data[date.date()].map((item) => (
               <Pressable
                 style={styles.selectedDate.box}
                 onPress={() => {
-                  navigation.navigate('Detail');
+                  navigation.navigate('Detail', {id: item.tmdbId});
                 }}
-                key={`${item.id}-${item.title}-${item.watch_date}`}
+                key={`${date.format('YYYY-MM-DD')}-${item.title}`}
               >
                 <MoviePoster
                   width={63}
                   height={83}
                   radius={5}
                   img={{
-                    uri:
-                      'https://image.tmdb.org/t/p/original' + item.poster_path,
+                    uri: item.poster,
                   }}
                 />
                 <Stack>
                   <Typography variant="Title2">{item.title}</Typography>
                   <Typography variant="Info" color="#a4a4a4">
-                    {item.release_date.slice(0, 4)}
+                    {`${item.nation}·${item.year}·${item.director}`}
                   </Typography>
                   <Group align="center" gap={2}>
                     <IconStar width={13} />
@@ -514,9 +428,9 @@ function Calendar({navigation}: CalendarScreenProp) {
           ) : (
             <Pressable
               style={styles.selectedDate.box}
-              onPress={() => {
-                navigation.navigate('Search');
-              }}
+              onPress={() =>
+                navigation.navigate('Search', {playlistId: undefined})
+              }
             >
               <View style={styles.selectedDate.emptyImg}>
                 <IconPlus fill="#6f00f8" />
@@ -533,7 +447,7 @@ function Calendar({navigation}: CalendarScreenProp) {
           )}
         </Stack>
       </Stack>
-    </Stack>
+    </ScrollView>
   );
 }
 

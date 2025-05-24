@@ -8,7 +8,7 @@ import IconEdit from '../assets/icon_edit_profile.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
-import {MyPageStackParamList} from '../navigators/MyPageNav';
+import {MainStackParamList} from '../navigators/Main';
 import {Fonts} from '../utils/fontStyle';
 
 const styles = {
@@ -26,10 +26,10 @@ const styles = {
 };
 
 type ProfileScreenProps = {
-  navigation: NativeStackNavigationProp<MyPageStackParamList, 'Profile'>;
+  navigation: NativeStackNavigationProp<MainStackParamList, 'Profile'>;
 };
 function Profile({navigation}: ProfileScreenProps) {
-  const [name, setName] = useState('이예림');
+  const [name, setName] = useState('김준수');
   const [email, setEmail] = useState('chocoboy0508@gmail.com');
   const [isEditing, setIsEditing] = useState(false);
   const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();

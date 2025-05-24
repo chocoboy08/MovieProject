@@ -1,9 +1,15 @@
 /* eslint-disable react-native/no-inline-styles */
 import {css} from '@emotion/native';
-import {useNavigation} from '@react-navigation/native';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {
+  CompositeNavigationProp,
+  useFocusEffect,
+} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useQuery} from '@tanstack/react-query';
 import React, {useState} from 'react';
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -11,6 +17,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Carousel from 'react-native-snap-carousel';
+import {instance} from '../apis/instance';
 import IconLogo from '../assets/icon_empty_logo.svg';
 import IconPlus from '../assets/icon_plus.svg';
 import IconSearch from '../assets/icon_search.svg';
@@ -18,9 +25,10 @@ import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
-import {HomeStackParamList} from '../navigators/HomeNav';
+import {MainStackParamList} from '../navigators/Main';
+import {TabParamList} from '../navigators/TabNav';
 import {Fonts} from '../utils/fontStyle';
-import {mockData} from '../utils/mockData';
+import {Movie} from '../utils/type';
 const styles = {
   banner: {
     background: css({
@@ -71,16 +79,71 @@ const styles = {
     }),
   },
 };
-type HomeScreenProps = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
-function Home() {
-  const navigation = useNavigation<HomeScreenProps>();
+type HomeScreenProps = {
+  navigation: CompositeNavigationProp<
+    BottomTabNavigationProp<TabParamList, 'Home'>,
+    NativeStackNavigationProp<MainStackParamList>
+  >;
+};
+function Home({navigation}: HomeScreenProps) {
   const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();
-  const watchedMovies = mockData[0].results.filter(
-    (item, idx) => idx < 3 && item,
-  );
+
   const [selectedPoster, setSelectedPoster] = useState('');
   const isCarousel = React.useRef(null);
-  return (
+  const userId = 3;
+  //최근 남긴 리뷰 가져오기
+  const myRecentReviewQuery = useQuery<Movie[]>({
+    queryKey: ['myRecent', userId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/record/home/recent/${userId}`);
+        return response.data;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+
+  //다른 유저가 최근 남긴 리뷰 가져오기
+  const otherRecentReviewQuery = useQuery<Movie[]>({
+    queryKey: ['otherRecent', 3],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/record/home/recent/exclusion/3`);
+
+        return response.data;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    enabled: false,
+  });
+
+  //최신 개봉작 가져오기
+  const nowPlayingQuery = useQuery<Movie[]>({
+    queryKey: ['nowPlaying'],
+    queryFn: async () => {
+      try {
+        const response = await instance.get('/movie/now-playing');
+        return response.data;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+  useFocusEffect(
+    React.useCallback(() => {
+      otherRecentReviewQuery.refetch();
+      myRecentReviewQuery.refetch();
+      nowPlayingQuery.refetch();
+    }, []),
+  );
+
+  return myRecentReviewQuery.isLoading ||
+    otherRecentReviewQuery.isLoading ||
+    nowPlayingQuery.isLoading ? (
+    <ActivityIndicator size={'large'} />
+  ) : (
     <ScrollView
       contentContainerStyle={{
         backgroundColor: '#fff',
@@ -89,18 +152,20 @@ function Home() {
         justifyContent: 'flex-start',
       }}
     >
-      <Stack style={[styles.banner.background, {height: deviceHeight * 0.4}]}>
-        {watchedMovies.length !== 0 && (
-          <Image
-            source={{
-              uri: 'https://image.tmdb.org/t/p/original' + selectedPoster,
-            }}
-            width={deviceWidth}
-            height={deviceHeight * 0.4}
-            style={{position: 'absolute', borderRadius: 10}}
-          />
-        )}
-        {watchedMovies.length === 0 && (
+      <Stack style={[styles.banner.background, {height: 330}]}>
+        {myRecentReviewQuery.data &&
+          myRecentReviewQuery.data.length !== 0 &&
+          selectedPoster && (
+            <Image
+              source={{
+                uri: selectedPoster,
+              }}
+              width={deviceWidth}
+              height={330}
+              style={{position: 'absolute', borderRadius: 10}}
+            />
+          )}
+        {myRecentReviewQuery.data && myRecentReviewQuery.data.length === 0 && (
           <IconLogo
             fill="#cecece"
             width={deviceWidth * 1.1}
@@ -108,7 +173,7 @@ function Home() {
             style={{position: 'absolute', top: 97}}
           />
         )}
-        {watchedMovies.length !== 0 && (
+        {myRecentReviewQuery.data && myRecentReviewQuery.data.length !== 0 && (
           <View
             style={{
               position: 'absolute',
@@ -129,7 +194,7 @@ function Home() {
           <Pressable
             style={{width: '100%', alignItems: 'center'}}
             onPress={() => {
-              navigation.navigate('Search');
+              navigation.navigate('Search', {playlistId: undefined});
             }}
           >
             <Typography variant="Body2" color="#737f8e">
@@ -137,10 +202,10 @@ function Home() {
             </Typography>
           </Pressable>
         </Group>
-        {watchedMovies.length === 0 ? (
+        {myRecentReviewQuery.data?.length === 0 ? (
           <Pressable
             onPress={() => {
-              navigation.navigate('Search');
+              navigation.navigate('Search', {playlistId: undefined});
             }}
           >
             <Stack
@@ -167,43 +232,47 @@ function Home() {
             </Stack>
           </Pressable>
         ) : (
-          <Carousel
-            layout="default"
-            ref={isCarousel}
-            data={watchedMovies}
-            renderItem={({item, index}) => {
-              return (
-                <Pressable
-                  key={index}
-                  style={styles.banner.movieRecordList.posterContainer}
-                >
-                  <MoviePoster
-                    img={{
-                      uri:
-                        'https://image.tmdb.org/t/p/original' +
-                        item.poster_path,
+          myRecentReviewQuery.data && (
+            <Carousel
+              layout="default"
+              ref={isCarousel}
+              data={myRecentReviewQuery.data}
+              renderItem={({item, index}) => {
+                return (
+                  <Pressable
+                    key={index}
+                    style={styles.banner.movieRecordList.posterContainer}
+                    onPress={() => {
+                      item.tmdbId &&
+                        navigation.navigate('Detail', {id: item.tmdbId});
                     }}
-                    width={128}
-                    height={195}
-                    radius={5}
-                  />
-                </Pressable>
-              );
-            }}
-            onSnapToItem={(idx) => {
-              setSelectedPoster(watchedMovies[idx].poster_path);
-            }}
-            onLayout={() => {
-              setSelectedPoster(
-                watchedMovies.length === 1
-                  ? watchedMovies[0].poster_path
-                  : watchedMovies[1].poster_path,
-              );
-            }}
-            sliderWidth={deviceWidth * 0.9}
-            itemWidth={128}
-            firstItem={1}
-          />
+                  >
+                    <MoviePoster
+                      img={{
+                        uri: item.poster,
+                      }}
+                      width={128}
+                      height={195}
+                      radius={5}
+                    />
+                  </Pressable>
+                );
+              }}
+              onSnapToItem={(idx) => {
+                setSelectedPoster(myRecentReviewQuery.data[idx].poster);
+              }}
+              onLayout={() => {
+                setSelectedPoster(
+                  myRecentReviewQuery.data.length <= 2
+                    ? myRecentReviewQuery.data[0].poster
+                    : myRecentReviewQuery.data[1].poster,
+                );
+              }}
+              sliderWidth={deviceWidth * 0.9}
+              itemWidth={128}
+              firstItem={myRecentReviewQuery.data.length <= 2 ? 0 : 1}
+            />
+          )
         )}
       </Stack>
       <Stack
@@ -225,7 +294,7 @@ function Home() {
           }}
         >
           <Typography variant="Title1" color="#2D3540">
-            인기 작품을 기록해 볼까요?
+            다른 유저들도 기록했어요
           </Typography>
         </Group>
         <ScrollView
@@ -233,29 +302,37 @@ function Home() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.movieInfoList.wrapper}
         >
-          {mockData[0].results.map((item) => {
-            return (
-              <Pressable
-                onPress={() => {
-                  navigation.navigate('Detail');
-                }}
-                key={`home-popular-korea-movie-${item.id}`}
-              >
-                <MoviePoster
-                  img={{
-                    uri:
-                      'https://image.tmdb.org/t/p/original' + item.poster_path,
+          {otherRecentReviewQuery.data &&
+            otherRecentReviewQuery.data.map((item) => {
+              return (
+                <Pressable
+                  onPress={() => {
+                    navigation.navigate('Detail', {
+                      id: item.tmdbId as number,
+                    });
                   }}
-                  width={125}
-                  height={171}
-                  radius={10}
-                />
-                <Typography variant="Body2" color="#000">
-                  {item.title}
-                </Typography>
-              </Pressable>
-            );
-          })}
+                  key={`home-popular-korea-movie-${item.tmdbId}`}
+                >
+                  <MoviePoster
+                    img={{
+                      uri: item.poster,
+                    }}
+                    width={125}
+                    height={171}
+                    radius={10}
+                  />
+                  <Typography
+                    variant="Body2"
+                    color="#000"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{width: '100%'}}
+                  >
+                    {item.title}
+                  </Typography>
+                </Pressable>
+              );
+            })}
         </ScrollView>
       </Stack>
       <Stack
@@ -285,29 +362,37 @@ function Home() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.movieInfoList.wrapper}
         >
-          {mockData[1].results.map((item) => {
-            return (
-              <Pressable
-                onPress={() => {
-                  navigation.navigate('Detail');
-                }}
-                key={`home-popular-korea-movie-${item.id}`}
-              >
-                <MoviePoster
-                  img={{
-                    uri:
-                      'https://image.tmdb.org/t/p/original' + item.poster_path,
+          {nowPlayingQuery.data &&
+            nowPlayingQuery.data.map((item) => {
+              return (
+                <Pressable
+                  onPress={() => {
+                    navigation.navigate('Detail', {
+                      id: item.tmdbId as number,
+                    });
                   }}
-                  width={125}
-                  height={171}
-                  radius={10}
-                />
-                <Typography variant="Body2" color="#000">
-                  {item.title}
-                </Typography>
-              </Pressable>
-            );
-          })}
+                  key={`home-popular-korea-movie-${item.tmdbId}`}
+                >
+                  <MoviePoster
+                    img={{
+                      uri: item.poster,
+                    }}
+                    width={125}
+                    height={171}
+                    radius={10}
+                  />
+                  <Typography
+                    variant="Body2"
+                    color="#000"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{width: 125}}
+                  >
+                    {item.title}
+                  </Typography>
+                </Pressable>
+              );
+            })}
         </ScrollView>
       </Stack>
     </ScrollView>

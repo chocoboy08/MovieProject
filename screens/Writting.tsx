@@ -1,18 +1,22 @@
 import {css} from '@emotion/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React, {useRef, useState} from 'react';
-import {Pressable, ScrollView, Text, TextInput} from 'react-native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import React, {useEffect, useRef, useState} from 'react';
+import {Pressable, ScrollView, TextInput} from 'react-native';
+import {instance} from '../apis/instance';
 import IconBack from '../assets/icon_back.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
-import {HomeStackParamList} from '../navigators/HomeNav';
-import {Fonts} from '../utils/fontStyle';
-import {mockData} from '../utils/mockData';
+import {MainStackParamList} from '../navigators/Main';
 
-type WrittingScreenProps = {
-  navigation: NativeStackNavigationProp<HomeStackParamList, 'Writting'>;
-};
+import {Fonts} from '../utils/fontStyle';
+import {Movie, ReviewData} from '../utils/type';
+
+type WrittingScreenProps = NativeStackScreenProps<
+  MainStackParamList,
+  'Writting'
+>;
 
 const styles = {
   contentWrapper: css({
@@ -40,11 +44,61 @@ function formatDate(date: Date) {
   return `${year}.${month}.${day} ${ampm} ${formattedHours}:${minutes}`;
 }
 
-function Writting({navigation}: WrittingScreenProps) {
+function Writting({navigation, route}: WrittingScreenProps) {
+  const movieId = route.params.id;
   const date = formatDate(new Date());
   const inputRef = useRef<TextInput>(null);
-  const [review, setReview] = useState('');
-  const handleSubmit = () => {};
+
+  const movieQuery = useQuery<Movie>({
+    queryKey: ['movieData', movieId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/movie/detail?tmdbId=${movieId}`);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+  const reviewQuery = useQuery<ReviewData>({
+    queryKey: ['reviewData'],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/record?userId=${3}&tmdbId=${movieId}`,
+        );
+        console.log(response.data);
+        return response.data;
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+  });
+  const [review, setReview] = useState(
+    reviewQuery.data?.review !== null ? reviewQuery.data?.review : '',
+  );
+  const writtingMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await instance.post('/record', {
+          tmdbId: movieId.toString(),
+          userId: 3,
+          ...reviewQuery.data,
+          review: review,
+        });
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    onSuccess: () => {
+      navigation.goBack();
+    },
+  });
+  useEffect(() => {
+    setReview(
+      reviewQuery.data?.review !== null ? reviewQuery.data?.review : '',
+    );
+  }, [reviewQuery.data]);
   return (
     <Stack style={{paddingTop: 51, backgroundColor: '#fff'}}>
       <Group position="apart" align="center">
@@ -69,7 +123,7 @@ function Writting({navigation}: WrittingScreenProps) {
             justifyContent: 'center',
           }}
           onPress={() => {
-            navigation.navigate('Detail');
+            writtingMutation.mutate();
           }}
         >
           <Typography variant="Title1" color="#6f00f8">
@@ -79,15 +133,13 @@ function Writting({navigation}: WrittingScreenProps) {
       </Group>
       <ScrollView style={styles.contentWrapper}>
         <Stack style={styles.title}>
-          <Typography variant="Title1">
-            {mockData[1].results[0].title}
-          </Typography>
-          <Typography variant="Info">
-            {mockData[1].results[0].original_title}
+          <Typography variant="Title1">{movieQuery.data?.title}</Typography>
+          <Typography variant="Info" color="#a6a6a6">
+            {movieQuery.data?.tagline}
           </Typography>
         </Stack>
         <Stack>
-          <Text>{date}</Text>
+          <Typography variant="Info">{date}</Typography>
           <Pressable
             onPress={() => {
               inputRef.current?.focus();

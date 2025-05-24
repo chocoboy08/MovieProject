@@ -1,4 +1,6 @@
 import {css} from '@emotion/native';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {CompositeNavigationProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React from 'react';
 import {Pressable, useWindowDimensions} from 'react-native';
@@ -7,7 +9,8 @@ import IconKakao from '../assets/icon_kakao.svg';
 import LogoWhite from '../assets/mookive_logo_white.svg';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
-import {HomeStackParamList} from '../navigators/HomeNav';
+import {MainStackParamList} from '../navigators/Main';
+import TabNav, {TabParamList} from '../navigators/TabNav';
 
 const styles = {
   background: css({
@@ -22,7 +25,10 @@ const styles = {
   }),
 };
 type LoginScreenProps = {
-  navigation: NativeStackNavigationProp<HomeStackParamList, 'Home'>;
+  navigation: CompositeNavigationProp<
+    NativeStackNavigationProp<MainStackParamList, 'Login'>,
+    BottomTabNavigationProp<TabParamList>
+  >;
 };
 function Login({navigation}: LoginScreenProps) {
   const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();
@@ -37,7 +43,7 @@ function Login({navigation}: LoginScreenProps) {
       <Pressable
         style={[styles.kakao, {width: deviceWidth * 0.83, paddingVertical: 10}]}
         onPress={() => {
-          navigation.navigate('Home');
+          navigation.navigate(TabNav, 'Home');
         }}
       >
         <IconKakao style={{position: 'absolute', left: deviceWidth * 0.058}} />

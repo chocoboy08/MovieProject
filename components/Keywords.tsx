@@ -1,18 +1,11 @@
 import {css} from '@emotion/native';
 import React from 'react';
-import {GestureResponderEvent, Pressable, Text} from 'react-native';
+import {Pressable, Text} from 'react-native';
 import {Fonts} from '../utils/fontStyle';
+import {KeywordsProps} from '../utils/type';
 
 import Group from './@base/Group';
 
-export interface KeywordProps {
-  selected: boolean;
-  content: string;
-}
-interface KeywordsProps {
-  keywordItem: KeywordProps;
-  handleKeywordPress?: (event: GestureResponderEvent) => void;
-}
 const styles = {
   wrapper: css({
     paddingHorizontal: 12,

@@ -1,7 +1,10 @@
 import {css} from '@emotion/native';
+import {useFocusEffect} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import React, {useEffect, useRef, useState} from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Modal,
@@ -11,8 +14,10 @@ import {
   View,
 } from 'react-native';
 import {Shadow} from 'react-native-shadow-2';
+import {instance} from '../apis/instance';
 import IconArrowDown from '../assets/icon_arrow_down.svg';
 import IconCheck from '../assets/icon_check.svg';
+import IconDeleteList from '../assets/icon_delete_list.svg';
 import IconDropDown from '../assets/icon_dropdown.svg';
 import IconFullStar from '../assets/icon_fullstar.svg';
 import IconMenu from '../assets/icon_hamburger.svg';
@@ -21,10 +26,13 @@ import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
 import MoviePoster from '../components/MoviePoster';
-import {StorageStackParamList} from '../navigators/StorageNav';
-import {mockData} from '../utils/mockData';
+import {MainStackParamList} from '../navigators/Main';
+import {GenreStorage, Movie, PlayList} from '../utils/type';
 
-const SORTINGMENU = ['최신순', '오래된 순', '관람객 순', '별점 순'];
+const SORTINGMENU = [
+  {name: '최신순', type: 'latest'},
+  {name: '오래된 순', type: 'earliest'},
+];
 
 const styles = {
   wrapper: css({
@@ -32,7 +40,6 @@ const styles = {
     flex: 1,
     paddingTop: 50,
     backgroundColor: '#fff',
-    paddingBottom: 40,
   }),
   menu: {
     box: css({}),
@@ -69,6 +76,7 @@ const styles = {
       flex: 1,
     }),
     container: css({
+      marginTop: 40,
       paddingTop: 37,
       borderTopRightRadius: 16,
       borderTopLeftRadius: 16,
@@ -91,24 +99,93 @@ const styles = {
 };
 
 type StorageDetailScreenProps = NativeStackScreenProps<
-  StorageStackParamList,
+  MainStackParamList,
   'StorageDetail'
 >;
 
 function StorageDetail({navigation, route}: StorageDetailScreenProps) {
+  const queryClient = useQueryClient();
   const params = route.params;
-  const STORAGEMENU = [
-    '나중에 볼 영화',
-    '내가 본 영화들',
-    '2024 가장 재밌게 본',
-    '겨울에 보고싶은 영화',
-  ];
-  const [selectedSorting, setSelectedSorting] = useState('별점 순');
-  const [selectedStorage, setSelectedStorage] = useState(STORAGEMENU[2]);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedSorting, setSelectedSorting] = useState(SORTINGMENU[0]);
+
+  const [playlistId, setPlaylistId] = useState(params.id);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [isAdd, setIsAdd] = useState(false);
+  const [editable, setEditable] = useState(params.editable);
+
+  const [deleteMenu, setDeleteMenu] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteList, setDeleteList] = useState<number[]>([]);
+
+  const isGenre = typeof playlistId === 'string';
+  const userId = 3;
+
+  //플리 목록 가져오기
+  const playlistNameQuery = useQuery<PlayList[]>({
+    queryKey: ['playlistNames', userId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/playlist/${userId}`);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+
+  //장르 가져오기
+  const genreNameQuery = useQuery<GenreStorage[]>({
+    queryKey: ['genre'],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/watched/genre/list?userId=${userId}`,
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+  //플리 영화 가져오기
+  const playlistMovieQuery = useQuery<Movie[]>({
+    queryKey: ['playlistMovies', userId, playlistId],
+    queryFn: async () => {
+      try {
+        if (isGenre) {
+          const response = await instance.get(
+            `/watched/genre/movie?userId=${userId}&genre=${playlistId}`,
+          );
+
+          return response.data;
+        } else {
+          const response = await instance.get(
+            `/movieInPlaylist/${selectedSorting.type}/${playlistId}`,
+          );
+          return response.data;
+        }
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+  });
+
+  //플리 영화 삭제
+  const deletingMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await instance.delete('/movieInPlaylist/delete', {
+          data: {playlistId: playlistId, tmdbIdList: deleteList},
+        });
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['playlistMovies']});
+    },
+  });
+
   const panY = useRef(
     new Animated.Value(Dimensions.get('screen').height),
   ).current;
@@ -150,10 +227,7 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
   const handleSortMenuOpen = () => {
     setDropdownOpen((prev) => !prev);
   };
-  const handleSortChange = (item: string) => {
-    setSelectedSorting(item);
-    setDropdownOpen(false);
-  };
+
   const handleStorageModalOpen = () => {
     setModalOpen((prev) => !prev);
   };
@@ -166,6 +240,31 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
       resetPositionAnim.start();
     }
   }, [modalOpen]);
+  const [selectedStorage, setSelectedStorage] = useState('');
+  useEffect(() => {
+    setSelectedStorage(
+      isGenre
+        ? playlistId
+        : (playlistNameQuery.data?.find(
+            (item) => item.playlistId === playlistId,
+          )?.name as string),
+    );
+  });
+  useEffect(() => {
+    playlistMovieQuery.refetch();
+  }, [playlistId, selectedSorting]);
+
+  const [isScreenFocused, setIsScreenFocused] = useState(false);
+  useFocusEffect(() => {
+    setIsScreenFocused(true); // when i focus the screen
+    return () => setIsScreenFocused(false); // when i quit the screen
+  });
+  useEffect(() => {
+    if (isScreenFocused) {
+      playlistMovieQuery.refetch();
+    }
+  }, [isScreenFocused]);
+
   return (
     <Stack align="center" style={styles.wrapper}>
       <Modal
@@ -183,25 +282,58 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
             {...panResponders.panHandlers}
           >
             <View style={styles.modal.bar} />
-            <Stack style={{marginBottom: 40}}>
-              {STORAGEMENU.map((item) => (
-                <Pressable
-                  style={[
-                    styles.modal.item,
-                    item === selectedStorage && {backgroundColor: '#f2f3f5'},
-                  ]}
-                  onPress={() => {
-                    handleStorageChange(item);
-                  }}
-                  key={`storagemenu-${item}`}
-                >
-                  <Group position="apart" align="center">
-                    <Typography variant="Title1">{item}</Typography>
-                    {item === selectedStorage && <IconCheck fill="#6f00f8" />}
-                  </Group>
-                </Pressable>
-              ))}
-            </Stack>
+            {isGenre ? (
+              <ScrollView>
+                {genreNameQuery.data?.map((item, idx) => (
+                  <Pressable
+                    style={[
+                      styles.modal.item,
+                      item.genre === selectedStorage && {
+                        backgroundColor: '#f2f3f5',
+                      },
+                    ]}
+                    onPress={() => {
+                      item.genre && setPlaylistId(item.genre);
+                      handleStorageChange(item.genre);
+                    }}
+                    key={`storagelist-${item.genre}-${idx}`}
+                  >
+                    <Group position="apart" align="center">
+                      <Typography variant="Title1">{item.genre}</Typography>
+                      {item.genre === selectedStorage && (
+                        <IconCheck fill="#6f00f8" />
+                      )}
+                    </Group>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : (
+              <ScrollView>
+                {playlistNameQuery.data?.map((item, idx) => (
+                  <Pressable
+                    style={[
+                      styles.modal.item,
+                      item.name === selectedStorage && {
+                        backgroundColor: '#f2f3f5',
+                      },
+                    ]}
+                    onPress={() => {
+                      item.playlistId && setPlaylistId(item.playlistId);
+                      handleStorageChange(item.name);
+                      if (idx > 1) setEditable(true);
+                    }}
+                    key={`storagemenu-${item.name}-${item.playlistId}`}
+                  >
+                    <Group position="apart" align="center">
+                      <Typography variant="Title1">{item.name}</Typography>
+                      {item.name === selectedStorage && (
+                        <IconCheck fill="#6f00f8" />
+                      )}
+                    </Group>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
           </Animated.View>
         </Stack>
       </Modal>
@@ -213,9 +345,43 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
               <IconArrowDown />
             </Group>
           </Pressable>
-          <Pressable style={{position: 'absolute', right: 0}}>
+          <Pressable
+            style={{
+              position: 'absolute',
+              right: 0,
+              paddingHorizontal: 5,
+              paddingVertical: 5,
+            }}
+            onPress={() => {
+              setDeleteMenu((prev) => !prev);
+            }}
+          >
             <IconMenu />
           </Pressable>
+          {deleteMenu && (
+            <Pressable
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: 25,
+                zIndex: 1,
+                borderRadius: 5,
+                borderWidth: 1,
+                borderColor: '#cdcdcd',
+                backgroundColor: '#fff',
+                paddingVertical: 5,
+                paddingHorizontal: 5,
+              }}
+              onPress={() => {
+                setIsDeleting(true);
+                setDeleteMenu(false);
+              }}
+            >
+              <Typography variant="Info" color="#ff0000">
+                영화 삭제하기
+              </Typography>
+            </Pressable>
+          )}
         </Group>
       </Stack>
       <ScrollView
@@ -223,133 +389,205 @@ function StorageDetail({navigation, route}: StorageDetailScreenProps) {
         showsVerticalScrollIndicator={false}
       >
         <Group
-          position="apart"
+          position={editable ? 'apart' : 'right'}
           align="center"
           style={{width: '100%', marginBottom: 24}}
         >
-          <Pressable
-            style={{
-              flexDirection: 'row',
-              gap: 5,
-              width: 110,
-              paddingVertical: 6,
-              borderRadius: 20,
-              backgroundColor: '#6f00f8',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onPress={() => {
-              setIsAdd(true);
-              navigation.navigate('AddMovies');
-            }}
-          >
-            <Typography variant="Info" color="#fff">
-              작품 추가하기
-            </Typography>
-            <IconPlus fill="#fff" />
-          </Pressable>
-          <View style={{position: 'relative'}}>
-            <Pressable
-              style={styles.dropdown.sortingMenu}
-              onPress={handleSortMenuOpen}
-            >
-              <Group gap={2} align="center">
-                <Typography variant="Info">{selectedSorting}</Typography>
-                <IconDropDown />
-              </Group>
-            </Pressable>
-            {dropdownOpen && (
-              <Shadow
-                style={styles.dropdown.wrapper}
-                containerStyle={{position: 'absolute', top: 37, right: -2}}
-                offset={[0, 2]}
-                startColor="rgba(0,0,0,0.1)"
+          {editable &&
+            (isDeleting ? (
+              <Pressable
+                style={{
+                  width: 72,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  borderColor: '#6f00f8',
+                  borderWidth: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                onPress={() => {
+                  setIsDeleting(false);
+                  setDeleteList([]);
+                }}
               >
-                <Stack>
-                  {SORTINGMENU.map((item, idx) => (
-                    <Pressable
-                      onPress={() => {
-                        handleSortChange(item);
-                      }}
-                      style={[
-                        styles.dropdown.item,
-                        idx === 0 && {borderTopWidth: 0},
-                        item === selectedSorting && {
-                          backgroundColor: '#f2f3f5',
-                          borderTopRightRadius: idx === 0 ? 12 : 0,
-                          borderTopLeftRadius: idx === 0 ? 12 : 0,
-                          borderBottomRightRadius: idx === 3 ? 12 : 0,
-                          borderBottomLeftRadius: idx === 3 ? 12 : 0,
-                        },
-                      ]}
-                      key={`sortingmenu-${item}`}
-                    >
-                      <Group position="apart">
-                        <Typography variant="Info">{item}</Typography>
-                        {item === selectedSorting && <IconCheck />}
-                      </Group>
-                    </Pressable>
-                  ))}
-                </Stack>
-              </Shadow>
-            )}
-          </View>
-        </Group>
-        <Group style={{flexWrap: 'wrap'}} gap={10} position="left">
-          {isAdd && (
-            <Stack
-              style={{width: 103, marginBottom: 20}}
-              justify="space-between"
-              key={`playlist-duen`}
-            >
-              <View>
-                <MoviePoster
-                  width={103}
-                  height={142}
-                  radius={5}
-                  img={{
-                    uri:
-                      'https://image.tmdb.org/t/p/original' +
-                      mockData[1].results[0].poster_path,
-                  }}
-                />
-                <Typography variant="Info" numberOfLines={1}>
-                  {mockData[1].results[0].title}
+                <Typography variant="Info" color="#6f00f8">
+                  삭제 취소
                 </Typography>
-              </View>
-              <Group align="center" gap={2}>
-                <IconFullStar width={13} height={13} />
-                <Typography variant="Info" color="#6F00F8">
-                  4.5
+              </Pressable>
+            ) : (
+              <Pressable
+                style={{
+                  flexDirection: 'row',
+                  gap: 5,
+                  width: 110,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  backgroundColor: '#6f00f8',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => {
+                  navigation.navigate('AddMovies', {
+                    playlistId: playlistId as number,
+                  });
+                }}
+              >
+                <Typography variant="Info" color="#fff">
+                  작품 추가하기
                 </Typography>
-              </Group>
-            </Stack>
-          )}
-          <Stack
-            style={{width: 103, marginBottom: 20}}
-            justify="space-between"
-            key={`playlist-avatar`}
-          >
-            <View>
-              <MoviePoster
-                width={103}
-                height={142}
-                radius={5}
-                img={require('../assets/posters/avatar.jpeg')}
-              />
-              <Typography variant="Info" numberOfLines={1}>
-                아바타: 물의 길
-              </Typography>
+                <IconPlus fill="#fff" />
+              </Pressable>
+            ))}
+          {!isGenre && (
+            <View style={{position: 'relative'}}>
+              <Pressable
+                style={styles.dropdown.sortingMenu}
+                onPress={handleSortMenuOpen}
+              >
+                <Group gap={2} align="center">
+                  <Typography variant="Info">{selectedSorting.name}</Typography>
+                  <IconDropDown />
+                </Group>
+              </Pressable>
+              {dropdownOpen && (
+                <Shadow
+                  style={styles.dropdown.wrapper}
+                  containerStyle={{position: 'absolute', top: 37, right: -2}}
+                  offset={[0, 2]}
+                  startColor="rgba(0,0,0,0.1)"
+                >
+                  <Stack>
+                    {SORTINGMENU.map((item, idx) => (
+                      <Pressable
+                        onPress={() => {
+                          setSelectedSorting(item);
+                          setDropdownOpen(false);
+                        }}
+                        style={[
+                          styles.dropdown.item,
+                          idx === 0 && {borderTopWidth: 0},
+                          item === selectedSorting && {
+                            backgroundColor: '#f2f3f5',
+                            borderTopRightRadius: idx === 0 ? 12 : 0,
+                            borderTopLeftRadius: idx === 0 ? 12 : 0,
+                            borderBottomRightRadius: idx === 3 ? 12 : 0,
+                            borderBottomLeftRadius: idx === 3 ? 12 : 0,
+                          },
+                        ]}
+                        key={`sortingmenu-${item}-${idx}`}
+                      >
+                        <Group position="apart">
+                          <Typography variant="Info">{item.name}</Typography>
+                          {item === selectedSorting && <IconCheck />}
+                        </Group>
+                      </Pressable>
+                    ))}
+                  </Stack>
+                </Shadow>
+              )}
             </View>
-            <Group align="center" gap={2}>
-              <IconFullStar width={13} height={13} />
-              <Typography variant="Info" color="#6F00F8">
-                4.0
-              </Typography>
-            </Group>
-          </Stack>
+          )}
+        </Group>
+
+        <Group style={{flexWrap: 'wrap'}} gap={10} position="left">
+          {playlistMovieQuery.isLoading ? (
+            <ActivityIndicator
+              size={'large'}
+              style={{flex: 1, width: '100%'}}
+            />
+          ) : (
+            playlistMovieQuery.data?.map((item, idx) => (
+              <Pressable
+                style={[
+                  {
+                    width: 103,
+                    marginBottom: 20,
+                    justifyContent: 'space-between',
+                  },
+                ]}
+                onPress={() => {
+                  item.tmdbId && isDeleting
+                    ? deleteList.includes(item.tmdbId)
+                      ? setDeleteList(
+                          deleteList.filter(
+                            (listItem) => listItem !== item.tmdbId,
+                          ),
+                        )
+                      : setDeleteList([...deleteList, item.tmdbId])
+                    : navigation.navigate('Detail', {id: item.tmdbId});
+                }}
+                key={`playlist-${playlistId}-${item.title}-${idx}`}
+              >
+                <View>
+                  {isDeleting &&
+                    item.tmdbId &&
+                    !deleteList.includes(item.tmdbId) && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          backgroundColor: 'rgba(255,255,255,0.5)',
+                          width: 103,
+                          height: 142,
+                          borderRadius: 5,
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
+
+                  <MoviePoster
+                    width={103}
+                    height={142}
+                    radius={5}
+                    img={{
+                      uri: item.poster,
+                    }}
+                  />
+
+                  <Typography variant="Info" numberOfLines={1}>
+                    {item.title}
+                  </Typography>
+                </View>
+                <Group align="center" gap={2}>
+                  <IconFullStar width={13} height={13} />
+                  <Typography variant="Info" color="#6F00F8">
+                    {item.rating || '-'}
+                  </Typography>
+                </Group>
+              </Pressable>
+            ))
+          )}
         </Group>
       </ScrollView>
+
+      {isDeleting && (
+        <Shadow
+          style={{
+            width: 125,
+            height: 33,
+            borderRadius: 16.5,
+            backgroundColor: '#6f00f8',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          containerStyle={{position: 'absolute', right: 15, bottom: 30}}
+          offset={[0, 2]}
+        >
+          <Pressable
+            onPress={() => {
+              deletingMutation.mutate();
+              setIsDeleting(false);
+              setDeleteList([]);
+            }}
+          >
+            <Group position="center" align="center">
+              <IconDeleteList width={15} />
+              <Typography variant="Info" color="#fff">
+                플리에서 제거하기
+              </Typography>
+            </Group>
+          </Pressable>
+        </Shadow>
+      )}
     </Stack>
   );
 }

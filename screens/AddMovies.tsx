@@ -1,15 +1,20 @@
 import {css} from '@emotion/native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useState} from 'react';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {CompositeScreenProps} from '@react-navigation/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack/lib/typescript/src/types';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import React, {useEffect, useState} from 'react';
 import {Image, Pressable, ScrollView} from 'react-native';
 import {Shadow} from 'react-native-shadow-2';
+import {instance} from '../apis/instance';
 import IconAddList from '../assets/icon_addlist.svg';
 import IconSearch from '../assets/icon_search.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
-import {StorageStackParamList} from '../navigators/StorageNav';
-import {mockData} from '../utils/mockData';
+import {MainStackParamList} from '../navigators/Main';
+import {TabParamList} from '../navigators/TabNav';
+import {Movie} from '../utils/type';
 
 const styles = {
   pageTop: {
@@ -54,12 +59,49 @@ const styles = {
     },
   },
 };
-type AddMoviesScreenProps = NativeStackScreenProps<
-  StorageStackParamList,
-  'AddMovies'
+type AddMoviesScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<MainStackParamList, 'AddMovies'>,
+  BottomTabScreenProps<TabParamList>
 >;
-function AddMovies({navigation}: AddMoviesScreenProps) {
-  const [addList, setAddList] = useState<number[]>([]);
+
+function AddMovies({navigation, route}: AddMoviesScreenProps) {
+  const [selectedMovie, setSelectedMovie] = useState<Movie>();
+  const userId = 3;
+  const {playlistId} = route.params;
+  //본 영화 목록 가져오기
+  const watchedMovieQuery = useQuery<Movie[]>({
+    queryKey: ['watched', 'addToPlaylist'],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/watched/playlist/addition?userId=${userId}`,
+        );
+        return response.data;
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+  });
+  //영화 추가하기
+  const playlistMovieMutation = useMutation({
+    mutationKey: ['watchedAdd'],
+    mutationFn: async () => {
+      try {
+        const response = await instance.post('/movieInPlaylist', {
+          playlistId: playlistId,
+          tmdbId: selectedMovie?.tmdbId?.toString(),
+        });
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    onSuccess: () => {
+      navigation.goBack();
+    },
+  });
+  useEffect(() => {
+    console.log(selectedMovie?.tmdbId?.toString());
+  });
   return (
     <Stack style={{flex: 1}}>
       <ScrollView style={{gap: 14}} contentContainerStyle={{flexGrow: 1}}>
@@ -76,7 +118,9 @@ function AddMovies({navigation}: AddMoviesScreenProps) {
               <Pressable
                 style={styles.pageTop.search.input}
                 onPress={() => {
-                  navigation.navigate('Search');
+                  navigation.navigate('Search', {
+                    playlistId: playlistId,
+                  });
                 }}
               >
                 <Typography variant="Body2" color="#747f8e">
@@ -95,23 +139,19 @@ function AddMovies({navigation}: AddMoviesScreenProps) {
               <Typography variant="Title1">내가 본 영화들</Typography>
             </Group>
             <Stack style={{width: '100%'}}>
-              {mockData[0].results.slice(0, 4).map((item) => {
+              {watchedMovieQuery.data?.map((item, idx) => {
                 return (
                   <Pressable
                     onPress={() => {
-                      if (addList.includes(item.id))
-                        setAddList(
-                          addList.filter((listItem) => listItem !== item.id),
-                        );
-                      else setAddList([...addList, item.id]);
+                      setSelectedMovie(selectedMovie ? undefined : item);
                     }}
                     style={[
-                      addList.includes(item.id)
+                      selectedMovie === item
                         ? styles.pageBottom.movies.border.selected
                         : styles.pageBottom.movies.border.unselected,
                       {alignItems: 'center'},
                     ]}
-                    key={`add-popular-movie-${item.id}`}
+                    key={`add-popular-movie-${item.tmdbId}-${idx}`}
                   >
                     <Group
                       align="flex-start"
@@ -119,17 +159,13 @@ function AddMovies({navigation}: AddMoviesScreenProps) {
                       style={{marginTop: 10, marginBottom: 10, width: 300}}
                     >
                       <Image
-                        src={
-                          'https://image.tmdb.org/t/p/original' +
-                          item.poster_path
-                        }
+                        source={{uri: item.poster}}
                         style={{width: 65, height: 89, borderRadius: 5}}
-                        key={`recent-list-${item.title}`}
                       />
                       <Stack>
                         <Typography variant="Title2">{item.title}</Typography>
-                        <Typography variant="Body2" color="#a4a4a4">
-                          {`${item.release_date}`}
+                        <Typography variant="Info" color="#a4a4a4">
+                          {`${item.nation}·${item.year}·${item.director}`}
                         </Typography>
                       </Stack>
                     </Group>
@@ -140,7 +176,7 @@ function AddMovies({navigation}: AddMoviesScreenProps) {
           </Stack>
         </Stack>
       </ScrollView>
-      {addList.length !== 0 && (
+      {selectedMovie && (
         <Shadow
           style={{
             width: 125,
@@ -154,7 +190,7 @@ function AddMovies({navigation}: AddMoviesScreenProps) {
         >
           <Pressable
             onPress={() => {
-              navigation.goBack();
+              playlistMovieMutation.mutate();
             }}
           >
             <Group position="center" align="center">

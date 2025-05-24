@@ -1,21 +1,9 @@
 import {css} from '@emotion/native';
-import React, {ReactNode} from 'react';
-import {
-  ImageBackground,
-  ImageSourcePropType,
-  Pressable,
-  View,
-} from 'react-native';
+import React from 'react';
+import {ImageBackground, Pressable, View} from 'react-native';
 import IconLogo from '../assets/icon_empty_logo.svg';
+import {StorageBoxProps} from '../utils/type';
 import Stack from './@base/Stack';
-export interface StorageBoxProps {
-  width: number;
-  height: number;
-  isEmpty?: boolean;
-  img?: ImageSourcePropType;
-  children: ReactNode;
-  onPress: () => void;
-}
 
 const styles = {
   backgroundImg: css({

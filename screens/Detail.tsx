@@ -1,7 +1,11 @@
 import {css} from '@emotion/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React, {useEffect, useRef, useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import React, {useEffect, useId, useRef, useState} from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
   ImageBackground,
@@ -16,7 +20,7 @@ import {
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import LinearGradient from 'react-native-linear-gradient';
-import {Shadow} from 'react-native-shadow-2';
+import {instance} from '../apis/instance';
 import IconAddList from '../assets/icon_addlist.svg';
 import {default as IconDown} from '../assets/icon_arrow_down.svg';
 import IconLogo from '../assets/icon_empty_logo.svg';
@@ -26,13 +30,19 @@ import IconWatching from '../assets/icon_watching.svg';
 import Group from '../components/@base/Group';
 import Stack from '../components/@base/Stack';
 import Typography from '../components/@base/Typography';
-import Keywords, {KeywordProps} from '../components/Keywords';
+import Keywords from '../components/Keywords';
 import MoviePoster from '../components/MoviePoster';
 import SeeMore from '../components/SeeMore';
 import StarRating from '../components/StartRating';
-import {HomeStackParamList} from '../navigators/HomeNav';
-import {mockData} from '../utils/mockData';
-import {mockPlaylist} from './PlayLists';
+import {MainStackParamList} from '../navigators/Main';
+import {
+  Heart,
+  Keyword,
+  Movie,
+  PlayList,
+  ReviewData,
+  Watched,
+} from '../utils/type';
 
 const styles = {
   banner: {
@@ -163,65 +173,220 @@ const styles = {
     },
   },
 };
-type DetailScreenProps = {
-  navigation: NativeStackNavigationProp<HomeStackParamList, 'Detail'>;
-};
-interface ReviewDataProps {
-  rating: number;
-  date: Date | undefined;
-  selectedKeywords: KeywordProps[];
-  review: string;
-}
-function Detail({navigation}: DetailScreenProps) {
+type DetailScreenProps = NativeStackScreenProps<MainStackParamList, 'Detail'>;
+
+const KEYWORDS = [
+  {selected: false, content: '연출'},
+  {selected: false, content: '스토리'},
+  {selected: false, content: '몰입도'},
+  {selected: false, content: '연기'},
+  {selected: false, content: '음악'},
+  {selected: false, content: 'CG'},
+  {selected: false, content: '킬링타임'},
+  {selected: false, content: '여운'},
+];
+function Detail({navigation, route}: DetailScreenProps) {
   const {width: deviceWidth, height: deviceHeight} = useWindowDimensions();
-  const [watched, setWatched] = useState(false);
-  const [hearted, setHearted] = useState(false);
+
   const [dateOpen, setDateOpen] = useState(false);
   const [keywordOpen, setKeywordOpen] = useState(false);
-  const [keywords, setKeywords] = useState<KeywordProps[]>([
-    {selected: false, content: '판타지'},
-    {selected: false, content: '로맨스'},
-    {selected: false, content: '감동'},
-    {selected: false, content: '코미디'},
-    {selected: false, content: '가족'},
-    {selected: false, content: '명작'},
-    {selected: false, content: '호러'},
-    {selected: false, content: '눈물나는'},
-    {selected: false, content: '팝콘각'},
-  ]);
-  const [reviewData, setReviewData] = useState<ReviewDataProps>({
-    rating: 0,
-    date: undefined,
-    selectedKeywords: [],
-    review: '',
-  });
-  const {rating, date, selectedKeywords, review} = reviewData;
-
   const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
-  const [addList, setAddList] = useState<number[]>([]);
-  const mockMovie = mockData[1].results[0];
-  const handleWatchedClick = () => {
-    //봤어요 클릭
-    if (watched) {
-      setReviewData({
-        rating: 0,
-        date: undefined,
-        selectedKeywords: [],
-        review: '',
-      });
-      setWatched(false);
-    } else setWatched(true);
-  };
+  const [errorCode, setErrorCode] = useState(0);
+  const [fullPlot, setFullPlot] = useState(4);
+  //백엔드 통신
+  const queryClient = useQueryClient();
+  //영화 데이터 가져오기
+  const movieId = route.params.id;
+
+  const movieQuery = useQuery<Movie>({
+    queryKey: ['movieData', movieId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/movie/detail?tmdbId=${movieId}`);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+  //플리 가져오기
+  const playlistQuery = useQuery<PlayList[]>({
+    queryKey: ['playlists', 3],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(`/playlist/${3}`);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+  });
+  const playlistMutation = useMutation({
+    mutationFn: async (playlistId: number) => {
+      try {
+        const response = await instance.post('/movieInPlaylist', {
+          playlistId: playlistId,
+          tmdbId: movieId,
+        });
+      } catch (error) {
+        console.log(error.response.data);
+        setErrorCode(error.response.data.errorCode);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['playlists', 3]});
+      handleDismiss();
+    },
+  });
+  const userId = 3;
+  //리뷰 데이터 가져오기
+
+  const reviewQuery = useQuery<ReviewData>({
+    queryKey: ['reviewData', userId, movieId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/record?userId=${userId}&tmdbId=${movieId}`,
+        );
+        return response.data;
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    enabled: !!movieQuery.data,
+  });
+
+  const [keywordList, setKeywordList] = useState<Keyword[]>(
+    KEYWORDS.map((item) => {
+      return reviewQuery.data
+        ? {
+            selected: reviewQuery.data.keywords.includes(item.content),
+            content: item.content,
+          }
+        : {selected: false, content: item.content};
+    }),
+  );
+  const [inputData, setInputData] = useState<ReviewData>(
+    reviewQuery.data
+      ? reviewQuery.data
+      : {
+          rating: null,
+          review: null,
+          date: null,
+          keywords: [],
+        },
+  );
+  const {rating, date, keywords, review} = reviewQuery.data
+    ? reviewQuery.data
+    : inputData;
+
+  //리뷰 데이터 올리기
+
+  const reviewMutation = useMutation({
+    mutationFn: async (action: string) => {
+      try {
+        const response =
+          action === 'post'
+            ? await instance.post('/record', {
+                tmdbId: movieId.toString(),
+                userId: userId,
+                ...inputData,
+              })
+            : await instance.delete(
+                `/record?userId=${userId}&movieId=${movieId}`,
+              );
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['reviewData']});
+      queryClient.invalidateQueries({queryKey: ['watched', movieId, useId]});
+    },
+  });
+
+  //봤어요 가져오기
+  const watchedQuery = useQuery<Watched>({
+    queryKey: ['watched', movieId, userId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/watched/check?userId=${3}&tmdbId=${movieId}`,
+        );
+        return response.data;
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    enabled: !!movieQuery.data,
+    refetchOnWindowFocus: true,
+  });
+
+  //봤어요 클릭
+  const watchedMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await instance.post(
+          `/watched?userId=${userId}&tmdbId=${movieId}`,
+        );
+      } catch (error) {
+        console.log(error.response.data);
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({queryKey: ['watched', movieId, userId]}),
+  });
+
+  //보고싶어요 가져오기
+  const heartQuery = useQuery<Heart>({
+    queryKey: ['heart', movieId, userId],
+    queryFn: async () => {
+      try {
+        const response = await instance.get(
+          `/heart/check?userId=${userId}&tmdbId=${movieId}`,
+        );
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+    enabled: !!movieQuery.data,
+  });
+
+  const heartMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await instance.post(
+          `/heart?userId=${3}&tmdbId=${movieId}`,
+        );
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({queryKey: ['heart']}),
+  });
   const handleHeartClick = () => {
-    //보고싶어요 클릭
-    setHearted((prev) => !prev);
+    heartMutation.mutate();
   };
+
   const handleDateModalOpen = () => {
-    setReviewData({...reviewData, date: new Date()});
+    setInputData({...inputData, date: changeDateFormat(new Date())});
     setDateOpen(true);
   };
   const handleKeywordModalOpen = () => {
     setKeywordOpen((prev) => !prev);
+  };
+
+  const changeDateFormat = (date: Date) => {
+    return (
+      date.getFullYear() +
+      '-' +
+      (date.getMonth() + 1 < 10 ? '0' : '') +
+      (date.getMonth() + 1) +
+      '-' +
+      (date.getDate() < 10 ? '0' : '') +
+      date.getDate()
+    );
   };
 
   const panY = useRef(
@@ -259,31 +424,64 @@ function Detail({navigation}: DetailScreenProps) {
       },
     }),
   ).current;
+
   const handleDismiss = () => {
     closeAnim.start(() => setPlaylistModalOpen(false));
   };
+
   useEffect(() => {
     if (playlistModalOpen) resetPositionAnim.start();
   }, [playlistModalOpen]);
+
   useEffect(() => {
-    setReviewData({
-      ...reviewData,
-      selectedKeywords: keywords.filter((item) => item.selected),
+    setInputData({
+      ...inputData,
+      keywords: keywordList
+        .map((item) => {
+          if (item.selected) return item.content;
+        })
+        .filter((item) => item !== undefined),
     });
-  }, [keywords]);
+  }, [keywordList]);
+
   useEffect(() => {
     if (
-      Object.entries(reviewData).toString() !==
-      Object.entries({
-        rating: 0,
-        date: undefined,
-        selectedKeywords: [],
-        review: '',
-      }).toString()
-    )
-      setWatched(true);
-  }, [reviewData]);
-  return (
+      reviewQuery.data &&
+      Object.entries(reviewQuery.data).toString() !==
+        Object.entries(inputData).toString()
+    ) {
+      if (
+        Object.entries(inputData).toString() ===
+        Object.entries({
+          rating: null,
+          review: null,
+          date: null,
+          keywords: [],
+        }).toString()
+      ) {
+        reviewMutation.mutate('delete');
+      } else reviewMutation.mutate('post');
+    }
+  }, [inputData]);
+  useFocusEffect(() => {
+    reviewQuery.refetch();
+  });
+  useEffect(() => {
+    if (errorCode === 1000) {
+      Alert.alert('이미 존재하는 영화입니다.');
+      setErrorCode(0);
+    }
+  }, [errorCode]);
+  useEffect(() => {
+    if (reviewQuery.isFetched === true && reviewQuery.data)
+      setInputData(reviewQuery.data);
+  }, [reviewQuery.data]);
+  return movieQuery.isLoading ||
+    reviewQuery.isLoading ||
+    heartQuery.isLoading ||
+    watchedQuery.isLoading ? (
+    <ActivityIndicator size={'large'} style={{flex: 1}} />
+  ) : (
     <ScrollView style={{backgroundColor: '#fff'}}>
       <Modal
         animationType="fade"
@@ -319,80 +517,55 @@ function Detail({navigation}: DetailScreenProps) {
                   width: deviceWidth,
                 }}
               >
-                {mockPlaylist.map((item) => (
-                  <Pressable
-                    style={[
-                      styles.playlistModal.item.wrapper,
-                      addList.includes(item.id) &&
-                        styles.playlistModal.item.selected,
-                    ]}
-                    key={`playlist-${item.id}-${item.title}`}
-                    onPress={() => {
-                      if (addList.includes(item.id))
-                        setAddList(
-                          addList.filter((listItem) => listItem !== item.id),
-                        );
-                      else setAddList([...addList, item.id]);
-                    }}
-                  >
-                    <Group gap={10}>
-                      {item.img ? (
-                        <View>
-                          <View style={styles.playlistModal.item.img.blur} />
-                          <MoviePoster
-                            width={101}
-                            height={101}
-                            img={item.img}
-                            radius={10}
-                          />
-                        </View>
-                      ) : (
-                        <View style={styles.playlistModal.item.img.none}>
-                          <IconLogo fill="#e6e6e6" />
-                        </View>
-                      )}
-                      <Stack justify="space-between">
-                        <Stack>
-                          <Group align="center" gap={5}>
-                            <Typography variant="Title1">
-                              {item.title}
-                            </Typography>
-                          </Group>
-                          <Typography variant="Info">{`${item.number}개 작품`}</Typography>
-                        </Stack>
-                        <SeeMore routeFn={() => {}} />
-                      </Stack>
-                    </Group>
-                  </Pressable>
-                ))}
+                {playlistQuery.data?.map(
+                  (item, idx) =>
+                    idx > 1 && (
+                      <Pressable
+                        style={[styles.playlistModal.item.wrapper]}
+                        key={`playlist-${item.playlistId}-${item.name}`}
+                        onPress={() => {
+                          item.playlistId !== undefined &&
+                            playlistMutation.mutate(item.playlistId);
+                        }}
+                      >
+                        <Group gap={10}>
+                          {item.poster ? (
+                            <View>
+                              <View
+                                style={styles.playlistModal.item.img.blur}
+                              />
+                              <MoviePoster
+                                width={101}
+                                height={101}
+                                img={{uri: item.poster}}
+                                radius={10}
+                              />
+                            </View>
+                          ) : (
+                            <View style={styles.playlistModal.item.img.none}>
+                              <IconLogo fill="#e6e6e6" />
+                            </View>
+                          )}
+                          <Stack justify="space-between">
+                            <Stack>
+                              <Group align="center" gap={5}>
+                                <Typography variant="Title1">
+                                  {item.name}
+                                </Typography>
+                              </Group>
+                              {item.total && (
+                                <Typography variant="Info">{`${
+                                  item.total + 1
+                                }개 작품`}</Typography>
+                              )}
+                            </Stack>
+                            <SeeMore routeFn={() => {}} />
+                          </Stack>
+                        </Group>
+                      </Pressable>
+                    ),
+                )}
               </ScrollView>
-              {addList.length !== 0 && (
-                <Shadow
-                  containerStyle={{
-                    position: 'absolute',
-                    right: 15,
-                    bottom: 95,
-                  }}
-                >
-                  <Pressable
-                    style={{
-                      width: deviceWidth * 0.36,
-                      height: deviceHeight * 0.05,
-                      borderRadius: deviceHeight * 0.025,
-                      backgroundColor: '#7a01f2',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                    onPress={() => {
-                      handleDismiss();
-                    }}
-                  >
-                    <Typography variant="Body2" color="#fff">
-                      완료
-                    </Typography>
-                  </Pressable>
-                </Shadow>
-              )}
             </Stack>
           </Animated.View>
         </Stack>
@@ -414,12 +587,12 @@ function Detail({navigation}: DetailScreenProps) {
                 이 영화의 키워드를 선정해주세요!
               </Typography>
               <View style={styles.keywordModal.keywords}>
-                {keywords.map((item) => (
+                {keywordList.map((item) => (
                   <Keywords
                     keywordItem={item}
                     handleKeywordPress={() => {
-                      setKeywords(
-                        keywords.map((newitem) => {
+                      setKeywordList(
+                        keywordList.map((newitem) => {
                           if (newitem.content === item.content)
                             return {
                               selected: !item.selected,
@@ -450,7 +623,7 @@ function Detail({navigation}: DetailScreenProps) {
       <ImageBackground
         style={styles.banner.background}
         source={{
-          uri: 'https://image.tmdb.org/t/p/original' + mockMovie.poster_path,
+          uri: movieQuery.data?.poster,
         }}
       >
         <LinearGradient
@@ -461,10 +634,10 @@ function Detail({navigation}: DetailScreenProps) {
         />
         <Stack style={{marginTop: 140, marginBottom: 35}} align="center">
           <Typography variant="Head1" color="#fff">
-            {mockMovie.title}
+            {movieQuery.data?.title}
           </Typography>
           <Typography variant="Info" color="#a4a4a4">
-            {mockMovie.release_date}
+            {`${movieQuery.data?.nation}·${movieQuery.data?.year}·${movieQuery.data?.director}`}
           </Typography>
         </Stack>
         <Typography
@@ -477,11 +650,17 @@ function Detail({navigation}: DetailScreenProps) {
               marginBottom: 10,
             },
           ]}
+          numberOfLines={fullPlot}
+          ellipsizeMode="clip"
         >
-          {mockMovie.overview}
+          {movieQuery.data?.plot}
         </Typography>
         <Pressable
           style={{marginBottom: 50, flexDirection: 'row', alignItems: 'center'}}
+          onPress={() => {
+            if (fullPlot === 4) setFullPlot(0);
+            else setFullPlot(4);
+          }}
         >
           <Typography variant="Info" color="#bdbdbd">
             더보기
@@ -496,22 +675,38 @@ function Detail({navigation}: DetailScreenProps) {
         >
           <Pressable onPress={handleHeartClick}>
             <Stack align="center" style={{paddingHorizontal: 14}}>
-              <IconHeart fill={hearted ? '#6f00f8' : '#acacac'} />
+              <IconHeart
+                fill={heartQuery.data?.heart ? '#6f00f8' : '#acacac'}
+              />
               <Typography
                 variant="Info"
-                color={hearted ? '#6f00f8' : '#acacac'}
+                color={heartQuery.data?.heart ? '#6f00f8' : '#acacac'}
               >
                 보고싶어요
               </Typography>
             </Stack>
           </Pressable>
 
-          <Pressable onPress={handleWatchedClick}>
+          <Pressable
+            onPress={() => {
+              if (watchedQuery.data?.watched) {
+                setInputData({
+                  rating: null,
+                  date: null,
+                  keywords: [],
+                  review: null,
+                });
+              }
+              watchedMutation.mutate();
+            }}
+          >
             <Stack align="center" style={{paddingHorizontal: 14}}>
-              <IconWatching fill={watched ? '#6f00f8' : '#acacac'} />
+              <IconWatching
+                fill={watchedQuery.data?.watched ? '#6f00f8' : '#acacac'}
+              />
               <Typography
                 variant="Info"
-                color={watched ? '#6f00f8' : '#acacac'}
+                color={watchedQuery.data?.watched ? '#6f00f8' : '#acacac'}
               >
                 봤어요
               </Typography>
@@ -547,7 +742,7 @@ function Detail({navigation}: DetailScreenProps) {
                 <Pressable
                   style={styles.bottom.editBtn}
                   onPress={() => {
-                    setReviewData({...reviewData, date: undefined});
+                    setInputData({...inputData, date: null});
                   }}
                 >
                   <Typography variant="Info" color="#ff0000">
@@ -567,9 +762,11 @@ function Detail({navigation}: DetailScreenProps) {
                   setDateOpen(true);
                 }}
               >
-                <Typography variant="Body1">{`${date.getFullYear()}년 ${
-                  date.getMonth() + 1
-                }월 ${date.getDate()}일`}</Typography>
+                <Typography variant="Body1">{`${new Date(
+                  date,
+                ).getFullYear()}년 ${
+                  new Date(date).getMonth() + 1
+                }월 ${new Date(date).getDate()}일`}</Typography>
                 <IconDown />
               </Pressable>
             ) : (
@@ -585,11 +782,11 @@ function Detail({navigation}: DetailScreenProps) {
           </Stack>
           {date && (
             <DatePicker
-              date={date}
+              date={new Date(date)}
               modal
               open={dateOpen}
               onConfirm={(date) => {
-                setReviewData({...reviewData, date: date});
+                setInputData({...inputData, date: changeDateFormat(date)});
                 setDateOpen(false);
               }}
               onCancel={() => {
@@ -604,14 +801,14 @@ function Detail({navigation}: DetailScreenProps) {
         <Stack align="flex-start" spacing={13}>
           <Group
             align="flex-end"
-            position={selectedKeywords.length !== 0 ? 'apart' : 'left'}
+            position={keywords && keywords.length !== 0 ? 'apart' : 'left'}
             gap={5}
             style={{width: '100%'}}
           >
             <Typography variant="Title1" color="#2d3540">
               키워드
             </Typography>
-            {selectedKeywords.length !== 0 ? (
+            {keywords && keywords.length !== 0 ? (
               <Pressable
                 style={styles.bottom.editBtn}
                 onPress={handleKeywordModalOpen}
@@ -626,14 +823,16 @@ function Detail({navigation}: DetailScreenProps) {
               </Typography>
             )}
           </Group>
-          {selectedKeywords.length !== 0 ? (
+          {keywords && keywords.length !== 0 ? (
             <Group gap={8} style={{width: 300, flexWrap: 'wrap'}}>
-              {selectedKeywords.map((item) => (
-                <Keywords
-                  keywordItem={item}
-                  key={`${item.content}-selected-${item.selected}`}
-                />
-              ))}
+              {keywordList
+                .filter((item) => item.selected)
+                .map((item) => (
+                  <Keywords
+                    keywordItem={item}
+                    key={`${item.content}-selected-${item.selected}`}
+                  />
+                ))}
             </Group>
           ) : (
             <Pressable
@@ -648,11 +847,26 @@ function Detail({navigation}: DetailScreenProps) {
         </Stack>
         <View style={styles.bottom.divider} />
         <Stack spacing={13}>
-          <Group align="flex-end" gap={5}>
+          <Group
+            align="flex-end"
+            position={inputData.rating === null ? 'left' : 'apart'}
+            gap={5}
+          >
             <Typography variant="Title1" color="#2d3540">
               평점
             </Typography>
-            {rating ? null : (
+            {rating ? (
+              <Pressable
+                style={styles.bottom.editBtn}
+                onPress={() => {
+                  setInputData({...inputData, rating: null});
+                }}
+              >
+                <Typography variant="Info" color="#ff0000">
+                  삭제
+                </Typography>
+              </Pressable>
+            ) : (
               <Typography variant={'Info'} color={'#c3c3c3'}>
                 아직 내 평점이 없어요!
               </Typography>
@@ -660,9 +874,9 @@ function Detail({navigation}: DetailScreenProps) {
           </Group>
           <Group>
             <StarRating
-              rating={rating}
+              rating={rating ? parseFloat(rating) : 0}
               setRating={(stars) => {
-                setReviewData({...reviewData, rating: stars});
+                setInputData({...inputData, rating: stars.toString()});
               }}
             />
           </Group>
@@ -672,30 +886,46 @@ function Detail({navigation}: DetailScreenProps) {
           <Group
             align="flex-end"
             gap={5}
-            position={review.length !== 0 ? 'apart' : 'left'}
+            position={review !== null ? 'apart' : 'left'}
             style={{width: '100%'}}
           >
             <Typography variant="Title1" color="#2d3540">
               내 후기
             </Typography>
-            {review.length !== 0 ? (
-              <Pressable style={styles.bottom.editBtn} onPress={() => {}}>
-                <Typography variant="Info" color="#a8a8a8">
-                  수정
-                </Typography>
-              </Pressable>
+            {review !== null ? (
+              <Group gap={10}>
+                <Pressable
+                  style={styles.bottom.editBtn}
+                  onPress={() => {
+                    navigation.navigate('Writting', {id: movieId});
+                  }}
+                >
+                  <Typography variant="Info" color="#a8a8a8">
+                    수정
+                  </Typography>
+                </Pressable>
+                <Pressable
+                  style={styles.bottom.editBtn}
+                  onPress={() => {
+                    setInputData({...inputData, review: null});
+                  }}
+                >
+                  <Typography variant="Info" color="#ff0000">
+                    삭제
+                  </Typography>
+                </Pressable>
+              </Group>
             ) : (
               <Typography variant={'Info'} color={'#c3c3c3'}>
                 후기를 추가해보세요!
               </Typography>
             )}
           </Group>
-          {review === '' ? (
+          {review === null ? (
             <Pressable
               style={styles.bottom.addBtn}
               onPress={() => {
-                setReviewData({...reviewData, review: '재밌었다.'});
-                navigation.navigate('Writting');
+                navigation.navigate('Writting', {id: movieId});
               }}
             >
               <Typography variant="Body2" color="#6f00f8">

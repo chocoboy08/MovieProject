@@ -14,19 +14,22 @@ import TabNav from './TabNav';
 export type MainStackParamList = {
   TabNav: undefined;
   Login: undefined;
-  Search: undefined;
+  Search: {playlistId?: number};
   Detail: {id: number};
-  Writting: undefined;
+  Writting: {id: number};
   MonthlyMovies: {year: number; month: number};
-  StorageDetail: undefined | {id: number};
+  StorageDetail: {id: number | string; editable: boolean};
   PlayLists: undefined;
-  AddMovies: undefined;
+  AddMovies: {playlistId: number};
   Profile: undefined;
 };
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 function Main() {
   return (
-    <MainStack.Navigator screenOptions={{headerShown: false}}>
+    <MainStack.Navigator
+      screenOptions={{headerShown: false}}
+      initialRouteName={'Login'}
+    >
       <MainStack.Screen name="TabNav" component={TabNav} />
       <MainStack.Screen name="Login" component={Login} />
       <MainStack.Screen name="Search" component={Search} />
